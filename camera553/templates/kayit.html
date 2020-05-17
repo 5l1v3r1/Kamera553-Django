@@ -1,0 +1,48 @@
+
+{% include "head.html" %}
+<title>Kamera553 Kayıt İşlemi</title>
+{% include "stylesheets.html" %}
+</head>
+<body>
+<div class="d-flex justify-content-center">
+    <form method="POST" action="/Kayit/" class="border-dark border mt-4" style="padding:50px;" id="MainForm">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="MainName">Ad</label>
+        <input type="text" class="form-control rounded-0" maxlength="32" id="MainName" name="name" placeholder="Soyad">
+        <small id="NameErrorArea" class="form-text text-danger">{{nameError}}</small>
+    </div>
+     <div class="form-group">
+        <label for="MainSurname">Soyad</label>
+        <input type="text" class="form-control rounded-0" maxlength="32" id="MainSurname" name="surname" placeholder="Soyad">
+        <small id="SurnameErrorArea" class="form-text text-danger">{{surnameError}}</small>
+    </div>
+    <div class="form-group">
+        <label for="MainMail">Email Adresi</label>
+        <input type="email" maxlength="267" class="form-control rounded-0" id="MainMail"  name="mail" aria-describedby="emailHelp" placeholder="Enter email">
+        <small id="MailHelpArea" class="form-text">Email adresini kimse ile paylaşmamanı tavsiyesi ediyoruz.</small>
+        <small id="MailErrorArea" class="form-text text-danger">{{mailError}}</small>
+    </div>
+    <div class="form-group">
+        <label for="MainPassword">Şifre</label>
+        <input type="password" class="form-control rounded-0" id="MainPassword" name="password1" placeholder="Şifre">
+        <small id="PasswordHelpArea" class="form-text">Şifreniz en az 8 en fazla 16 karakter içermelidir!<br>
+        Şifreniz boşluk barındıramaz.</small>
+    </div>
+        <div class="form-group">
+        <label for="RePassword">Şifre Tekrar</label>
+        <input type="password" class="form-control rounded-0" id="RePassword" name="password2" placeholder="Şifre">
+        <small id="PasswordErrorArea" class="form-text text-danger">{{passwordError}}</small>
+    </div>
+    <button onclick="send()" type="button" class="btn btn-success btn-block rounded-0" id="registerBtn">Kayıt Ol</button>
+    <br>
+    <hr>
+    <br>
+     <a  href="/"><button type="button" class="btn btn-danger rounded-0 btn-block">Geri Dön</button></a><br>
+    </form>
+</div>
+
+
+    {% include "scripts.html" %}
+    </body>
+</html>

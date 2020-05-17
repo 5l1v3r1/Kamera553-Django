@@ -1,0 +1,45 @@
+.active {
+    font-size:20px !important;
+}
+
+.navbar-brand{
+    font-size:24px;   
+}
+
+.dropdown-item:hover{
+    background-color: white;
+}
+
+
+
+.navbar {
+    padding: 0 !important;
+}
+
+.navbar-custom .navbar-nav .nav-link{
+    color: #2d3436 !important;
+    font-size:20px !important;
+    padding:22px !important;
+}
+
+
+
+.navbar-light .navbar-nav .nav-link:hover {
+    color: white !important;
+    background-color: #2d3436 !important;
+    opacity: 0.6;
+}
+
+.navbar-custom .navbar-nav .active{
+    background-color: #2d3436 !important;
+    color: white !important;
+    font-size:20px !important;
+}
+
+
+.logbtn{
+    padding:21px !important;
+    font-size:20px !important;
+}
+
+.
