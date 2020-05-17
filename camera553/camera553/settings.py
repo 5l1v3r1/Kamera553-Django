@@ -78,9 +78,9 @@ WSGI_APPLICATION = 'camera553.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'finproject',
-        'USER':'newuser',
-        'PASSWORD':'123456',
+        'NAME': 'Kamera553Django',
+        'USER':'newbie',
+        'PASSWORD':'12345Kamera',
         'HOST':'localhost',
         'PORT':'5432'
     }
