@@ -1,0 +1,19 @@
+{% include "layout/head.html" %}
+{% block body %}
+<div class="d-flex justify-content-center">
+    <form method="POST" action="/user/register/" class="border-dark border mt-4" style="padding:50px;" id="MainForm">
+    {% csrf_token %}
+        {{ form.as_p }}
+    <br>
+    <input type="submit" value="Kayıt Ol" class="btn btn-success rounded-0 btn-block">
+    <br>
+    <hr>
+    <br>
+     <a  href="/"><button type="button" class="btn btn-danger rounded-0 btn-block">Geri Dön</button></a><br>
+    </form>
+</div>
+
+
+    {% include "layout/script.html" %}
+{% endblock body %}
+</html>
