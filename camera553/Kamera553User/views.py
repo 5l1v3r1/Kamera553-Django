@@ -13,7 +13,7 @@ def register(request):
             first_name = form.cleaned_data.get("first_name")
             last_name = form.cleaned_data.get("last_name")
             email = form.cleaned_data.get("email")
-            password = form.cleaned_data.get("username")
+            password = form.cleaned_data.get("password")
             newUser = User(username=username,first_name=first_name,last_name=last_name,email=email)
             newUser.set_password(password)
             newUser.save()
