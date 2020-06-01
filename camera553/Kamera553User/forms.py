@@ -2,8 +2,9 @@ from django import forms
 from django.forms import ValidationError
 from django.contrib.auth.models import User
 import re
-regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
-regex2='^[a-zA-Z ]+$'
+regex = '^[a-zA-Z0-9_.-]+@[a-zA-Z.]+?\.[a-zA-Z]{2,3}$'
+regex2= '^[a-zA-Z ]+$'
+regex3= '^[a-z0-9]+$'
 
 class LoginForm(forms.Form):
     username = forms.CharField(max_length=32, label="Kullanıcı Adı", required=True,
@@ -61,6 +62,9 @@ class RegisterForm(forms.Form):
         if not re.search(regex2,first_name) and re.search(regex2,last_name):
             errors.append(ValidationError("Adınız ve Soyadınız sadece harf içerebilir!"))
             g += 1
+        if not re.search(regex3,username):
+            errors.append(ValidationError("Kullanıcı adınız sadece küçük harf ve sayılar içerebilir!"))
+            g+=1
         if not re.search(regex,email):
             errors.append(ValidationError("Email adresinizi doğru girdiğinizden emin olun!"))
             g += 1
