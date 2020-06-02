@@ -4511,7 +4511,8 @@ readers do not read off random characters that represent icons */
   overflow: hidden;
   padding: 0;
   position: absolute;
-  width: 1px; }
+  width: 1px; 
+  margin-left: 80px;}
 
 .sr-only-focusable:active, .sr-only-focusable:focus {
   clip: auto;

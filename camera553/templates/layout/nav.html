@@ -9,6 +9,13 @@
                             Anasayfa <span class="sr-only">(current)</span>
                         </a>
                     </li>
+                    {% if user.id %}
+                    <li class="navbar-item">
+                        <a class="nav-link active" href="/cams">
+                            Kameralar <span class="sr-only" >(current)</span>
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
                 <div class="form-inline my-2 my-lg-0">

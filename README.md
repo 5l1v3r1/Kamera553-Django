@@ -6,7 +6,8 @@ Kamera553 Uygulamasının geliştirilme projesidir.<br />
 Bu proje daha önce ortaklaşa yapılıp live ortamda geliştirilmiştir.<br />
 
 Son Gelişme:<br />
-&nbsp;&nbsp;&nbsp;Giriş işlemleri tamamlandı<br />
+&nbsp;&nbsp;&nbsp;Opencv Dahil Edildi<br />
+&nbsp;&nbsp;&nbsp;Kameralar Bölümü Eklendi<br />
 
 //Kamera553App --> Proje<br />
 //Static --> Statik klasör tasarım dosyaları<br />
@@ -27,5 +28,8 @@ Son Gelişme:<br />
 &nbsp;&nbsp;&nbsp;--> style.html ==> stylesheetleri yüklemek için<br />
 --> home ==> anasayfa dosyaları<br />
 --> register ==> kayıt dosyaları<br />
+--> camera ==> Kamera Sayfasının Dosyaları <br />
+--> output ==> Opencv ve çıktı dosyaları <br />
 |<br />
 //Kamera553User --> Kullanıcı işlemleri uygulaması<br />
+//Kamera553 --> Kamera ve geri kalan işlemlerin uygulaması<br />
