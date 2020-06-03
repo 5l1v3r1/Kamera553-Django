@@ -1,33 +1,44 @@
 {% include "layout/head.html" %}
 {% block body %}
         {% include "layout/nav.html" %}
+        <li class="navbar-item"></li>
+    <a class="nav-link" href="/">
+        Anasayfa 
+    </a>
+</li>
+{% if user.id %}
+<li class="navbar-item">
+    <a class="nav-link active" href="/cams/">
+        Kameralar <span class="sr-only" >(current)</span>
+    </a>
+</li>
+{% endif %}
+{% include "layout/nav2.html" %}
+
         {% include "layout/script.html" %}
         {% if user.id %}
-        <form method="POST" action="">
+        <div class="d-flex justify-content-center">
+        <form method="POST" action="/cams/" name="camForm" class=" mt-4" style="padding:50px;" id="MainForm">
             {% csrf_token %}
         <p>
             <a class="btn btn-primary" data-toggle="collapse" href="#collapsecam" role="button" aria-expanded="false" aria-controls="collapsecam">
-              Kamera Ekle
+                Kamera Ekle
             </a>
           </p>
           <div class="collapse" id="collapsecam">
             <div class="card card-body">
-                <form>
-                    <div class="form-group">
-                      <label for="camName">Kamera Adı</label>
-                      <input type="text" class="form-control" id="camName" aria-describedby="CamHelp" placeholder="Kamera Adını Giriniz">
-                      <small id="CamHelp" class="form-text text-muted">Kamera Adınızı Sadece "A-Z" "a-z" "0-9" ve "- " Kullanarak Yazınız!</small>
-                      <small id="NameErrorArea" class="form-text text-danger">{{cameranameError}}</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="camUrl">Kamera Adresi</label>
-                        <input type="text" class="form-control" id="camUrl" aria-describedby="CamUrlHelp" placeholder="Kamera Url Adresininzi Giriniz">
-                        <small id="CamUrlHelp" class="form-text text-muted">Kamera Adresinizi "http://mycam12345.com" Şeklinde Yazınız</small>
-                        <small id="UrlErrorArea" class="form-text text-danger">{{cameraurlError}}</small>  
-                    </div>
 
-                    <button type="submit" class="btn btn-primary">Kaydet</button>
-                  </form>
+
+                {% csrf_token %}
+                    {{ form.as_p }}
+                <br>
+                <input type="submit" value="Kaydet" class="btn btn-success rounded-0 btn-block">
+                <br>
+                <hr>
+                <br>
+                 <a  href="/cams/"><button type="button" class="btn btn-danger rounded-0 btn-block">İptal Et</button></a><br>
+                </form>
+            </div>
             </div>
           </div>
           </form>

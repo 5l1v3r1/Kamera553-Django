@@ -1,0 +1,52 @@
+</ul>
+</div>
+    <div class="form-inline my-2 my-lg-0">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item dropdown hidden-md-down">
+            {% if user.id %}
+            <button class="logbtn dropdown-toggle btn-danger btn rounded-0" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                 <i class="fas fa-user"></i><strong class="ml-1">{{user.first_name}} {{user.last_name}}</strong>
+                           </button>
+                <div class="dropdown-menu dropdown-menu-right rounded-0" aria-labelledby="navbarDropdownMenuLink">
+                <a class="dropdown-item"><strong>Hesap İşlemleri</strong></a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="/user/logout/">
+                        <center>
+                        <button type="button" class="btn btn-danger btn-block rounded-0"><i class="fas fa-edit"></i><strong class="ml-1">Çıkış Yap</strong></button>
+                        </center>
+                    </a>
+            </button>
+            </div>
+            {% else %}
+            <button class="logbtn dropdown-toggle btn-danger btn rounded-0" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="fas fa-user"></i><strong class="ml-1">HESAP</strong>
+            </button>
+             <div class="dropdown-menu dropdown-menu-right rounded-0" aria-labelledby="navbarDropdownMenuLink">
+                <a class="dropdown-item">
+                    <form action="/user/login/" method="POST">
+                           {% csrf_token %}
+                                {{ form.as_p }}
+                                <button type="submit" class="btn btn-primary btn-block rounded-0"><i class="fas fa-sign-in-alt"></i><strong class="ml-1">Giriş Yap</strong></button>
+                    </form><br>
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="/user/register/">
+                    <center>
+                    <button type="button" class="btn btn-danger btn-block rounded-0"><i class="fas fa-edit"></i><strong class="ml-1">Kayıt Ol</strong></button>
+                    </center>
+                </a>
+            </div>
+            {% endif %}
+            </li>
+        </ul>
+    </div>
+</nav>
+{% if messages %}
+<div class="container-fluid bg-danger text-light">
+<ul class="list-inline">
+{% for message in messages %}
+    <li class="list-inline-item">{{message}}</li>
+{% endfor %}
+</ul>
+</div>
+{% endif %}

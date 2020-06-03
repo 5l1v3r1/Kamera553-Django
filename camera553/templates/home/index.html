@@ -1,6 +1,19 @@
 {% include "layout/head.html" %}
 {% block body %}
-        {% include "layout/nav.html" %}
+{% include "layout/nav.html" %}
+<li class="navbar-item"></li>
+<a class="nav-link active" href="/">
+Anasayfa <span class="sr-only" >(current)</span>
+</a>
+</li>
+{% if user.id %}
+<li class="navbar-item">
+<a class="nav-link " href="/cams/">
+Kameralar 
+</a>
+</li>
+{% endif %}
+{% include "layout/nav2.html" %}
         {% include "layout/script.html" %}
 {% endblock body %}
 </html>
