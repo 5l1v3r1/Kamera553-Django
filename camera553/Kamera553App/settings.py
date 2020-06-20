@@ -82,7 +82,7 @@ DATABASES = {
         'NAME': 'kamera553django',
         'USER': 'newbie',
         'PASSWORD': '12345kamera',
-        'HOST': 'localhost',
+        'HOST': '78.186.240.218',
         'PORT': '5432'
     }
 }

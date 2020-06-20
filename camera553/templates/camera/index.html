@@ -19,8 +19,9 @@
     </li>
 {% endif %}
 {% include "layout/nav2.html" %}
+        
 
-        {% include "layout/script.html" %}
+
         {% if user.id %}
         <div class="d-flex justify-content-center">
         <form method="POST" action="/cams/" name="camForm" class=" mt-4" style="padding:50px;" id="MainForm">
@@ -46,11 +47,14 @@
           </div>
           <div class="container-fluid">
             <div class="d-flex justify-content-center">
+            {% for cam in cameras %}
                 <div class="card" style='padding: 25px;'>
                 <a href="www.google.com">
                     <img src="http://82.65.5.211:8082/mjpg/video.mjpg" width="420" height="420"/>
+                    {{cam.cam_name}}
                 </a>
                 </div>
+                {% endfor %}
                 <div class="card" style='padding: 25px;'>
                     <a href="www.google.com">
                         <img src="http://82.65.5.211:8082/mjpg/video.mjpg" width="420" height="420"/>
@@ -83,5 +87,6 @@
         {% endif %}
 
     </div>
+    {% include "layout/script.html" %}
 {% endblock body %}
 </html>

@@ -2,6 +2,7 @@ from django.shortcuts import render,redirect
 from .models import camera,alertme
 from django.http import HttpResponse,HttpResponseNotAllowed
 from .forms import CameraForm,AlertForm
+from django.http import JsonResponse
 from django.contrib import  messages
 import xml.etree.cElementTree as ET
 import os
@@ -125,4 +126,14 @@ def showalerts(request):
             }
             return render(request,'alert/index.html',data)
     else:
-        return redirect("/")      
+        return redirect("/")   
+
+def kameragoster(request):
+    return render(request, "camera/kameraizle.html")
+
+def resimverisi(request):
+    cameras= camera.objects.filter(owner_id=request.user.id).values()
+    for deger in cameras:
+        return HttpResponse(deger["cam_image"])
+
+

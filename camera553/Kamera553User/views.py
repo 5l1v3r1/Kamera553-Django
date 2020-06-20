@@ -1,9 +1,10 @@
 from django.shortcuts import render,redirect
-from django.http import  HttpResponse
+from django.http import  HttpResponse,StreamingHttpResponse
 from .forms import RegisterForm,LoginForm
 from django.contrib import  messages
 from django.contrib.auth.models import User
 from django.contrib.auth import login,authenticate,logout
+import requests
 
 def register(request):
     if request.method == "POST":
@@ -59,3 +60,7 @@ def loginUser(request):
 def logoutUser(request):
     logout(request)
     return redirect('/')
+
+
+def get_image(request):
+    return render(request, "camera/yayin.html")
