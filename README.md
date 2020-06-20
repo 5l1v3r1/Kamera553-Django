@@ -33,3 +33,5 @@ Son Gelişme:<br />
 |<br />
 //Kamera553User --> Kullanıcı işlemleri uygulaması<br />
 //Kamera553 --> Kamera ve geri kalan işlemlerin uygulaması<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;)
