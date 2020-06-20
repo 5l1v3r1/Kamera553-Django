@@ -19,14 +19,34 @@
     </li>
 {% endif %}
 {% include "layout/nav2.html" %}
-    <div class="container-fluid">
+
+        {% include "layout/script.html" %}
+        {% if user.id %}
         <div class="d-flex justify-content-center">
-            <div class="card" style='padding: 25px;'>
-            <a href="www.google.com">
-                <img src="http://82.65.5.211:8082/mjpg/video.mjpg" width="420" height="420"/>
+        <form method="POST" action="/cams/" name="camForm" class=" mt-4" style="padding:50px;" id="MainForm">
+            {% csrf_token %}
+        <p>
+            <a class="btn btn-primary" data-toggle="collapse" href="#collapsecam" role="button" aria-expanded="false" aria-controls="collapsecam">
+                Kamera Ekle
             </a>
+          </p>
+          <div class="collapse" id="collapsecam">
+            <div class="card card-body">
+                {% csrf_token %}
+                    {{ form.as_p }}
+                <br>
+                <input type="submit" value="Kaydet" class="btn btn-success rounded-0 btn-block">
+                <br>
+                <hr>
+                <br>
+                 <a  href="/cams/"><button type="button" class="btn btn-danger rounded-0 btn-block">İptal Et</button></a><br>
+                </form>
             </div>
-            <div class="card" style='padding: 25px;'>
+            </div>
+          </div>
+          <div class="container-fluid">
+            <div class="d-flex justify-content-center">
+                <div class="card" style='padding: 25px;'>
                 <a href="www.google.com">
                     <img src="http://82.65.5.211:8082/mjpg/video.mjpg" width="420" height="420"/>
                 </a>
@@ -36,14 +56,14 @@
                         <img src="http://82.65.5.211:8082/mjpg/video.mjpg" width="420" height="420"/>
                     </a>
                     </div>
-        </div>
-        <div class="d-flex justify-content-center">
-            <div class="card" style='padding: 25px;' >
-            <a href="www.google.com">
-                <img src="http://82.65.5.211:8082/mjpg/video.mjpg" width="420" height="420"/>
-            </a>
+                    <div class="card" style='padding: 25px;'>
+                        <a href="www.google.com">
+                            <img src="http://82.65.5.211:8082/mjpg/video.mjpg" width="420" height="420"/>
+                        </a>
+                        </div>
             </div>
-            <div class="card" style='padding: 25px;'>
+            <div class="d-flex justify-content-center">
+                <div class="card" style='padding: 25px;' >
                 <a href="www.google.com">
                     <img src="http://82.65.5.211:8082/mjpg/video.mjpg" width="420" height="420"/>
                 </a>
@@ -52,9 +72,16 @@
                     <a href="www.google.com">
                         <img src="http://82.65.5.211:8082/mjpg/video.mjpg" width="420" height="420"/>
                     </a>
-                </div>
+                    </div>
+                    <div class="card" style='padding: 25px;'>
+                        <a href="www.google.com">
+                            <img src="http://82.65.5.211:8082/mjpg/video.mjpg" width="420" height="420"/>
+                        </a>
+                    </div>
+            </div>
         </div>
+        {% endif %}
+
     </div>
-    {% include "layout/script.html" %}
 {% endblock body %}
 </html>
