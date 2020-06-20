@@ -48,3 +48,36 @@ class CameraForm(forms.Form):
         }
 
         return values
+
+class AlertForm(forms.Form):
+    a_start = forms.TimeField(label="Başlangıç Saati",required=True,
+                               help_text='Lütfen Seçim Yapınız!',
+                               widget=forms.TimeInput(attrs={'class': 'form-control rounded-0'}))
+    a_end = forms.TimeField(label="Bitiş Saati",required=True,
+                                help_text='Lütfen Seçim Yapınız',
+                                widget=forms.TimeInput(attrs={'class': 'form-control rounded-0'}))
+
+    def clean(self):
+        starttime=self.cleaned_data.get("a_start")
+        endtime=self.cleaned_data.get("a_end")
+        Errors=""
+        g=0
+        if a_start==None or  a_start=="" or  a_end==None or a_end==""  :
+            Errors+="Saat Seçimlerini Yapın\n"
+            g+=1
+        
+            if g>0:
+                values={
+                    "Errors":Errors,
+                    "Durum":"0"
+                }
+                return values
+
+
+
+        values = {
+            "Durum":"1"
+        }
+
+        return values
+        

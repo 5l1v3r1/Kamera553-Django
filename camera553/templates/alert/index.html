@@ -1,0 +1,52 @@
+{% include "layout/head.html" %}
+{% block body %}
+        {% include "layout/nav.html" %}
+        <li class="navbar-item"></li>
+    <a class="nav-link" href="/">
+        Anasayfa 
+    </a>
+</li>
+{% if user.id %}
+<li class="navbar-item">
+    <a class="nav-link active" href="/cams/">
+        Kameralar <span class="sr-only" >(current)</span>
+    </a>
+</li>
+<li class="navbar-item">
+    <a class="nav-link " href="/cams/alerts/">
+    Alarmlar
+    </a>
+    </li>
+{% endif %}
+{% include "layout/nav2.html" %}
+
+        {% include "layout/script.html" %}
+        {% if user.id %}
+        <div class="d-flex justify-content-center">
+        <form method="POST" action="/cams/alerts/" name="alertForm" class=" mt-4" style="padding:50px;" id="MainForm">
+            {% csrf_token %}
+        <p>
+            <a class="btn btn-primary" data-toggle="collapse" href="#collapsealert" role="button" aria-expanded="false" aria-controls="collapsecam">
+                Alarm Saati Ekle
+            </a>
+          </p>
+          <div class="collapse" id="collapsealert">
+            <div class="card card-body">
+
+                    {{ form.as_p }}
+                <br>
+                <input type="submit" value="Kaydet" class="btn btn-success rounded-0 btn-block">
+                <br>
+                <hr>
+                <br>
+                 <a  href="/cams/alerts/"><button type="button" class="btn btn-danger rounded-0 btn-block">İptal Et</button></a><br>
+                </form>
+            </div>
+            </div>
+          </div>
+
+        {% endif %}
+
+    </div>
+{% endblock body %}
+</html>
