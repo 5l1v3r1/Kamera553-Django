@@ -2,23 +2,53 @@
 {% block body %}
 {% include "layout/nav.html" %}
 <li class="navbar-item"></li>
-<a class="nav-link active" href="/">
-Anasayfa <span class="sr-only" >(current)</span>
-</a>
+    <a class="nav-link active" href="/"> Anasayfa <span class="sr-only" >(current)</span>
+    </a>
 </li>
 {% if user.id %}
-<li class="navbar-item">
-<a class="nav-link " href="/cams/">
-Kameralar 
-</a>
-</li>
-<li class="navbar-item">
-        <a class="nav-link " href="cams/alerts/">
-        Alarmlar
+    <li class="navbar-item">
+        <a class="nav-link " href="/cams/">
+            Kameralar 
         </a>
-        </li>
+    </li>
+    <li class="navbar-item">
+        <a class="nav-link " href="cams/alerts/">
+            Alarmlar
+        </a>
+    </li>
+    <li class="navbar-item">
+        <a class="nav-link " href="cams/reports/">
+            Raporlar
+        </a>
+    </li>
 {% endif %}
 {% include "layout/nav2.html" %}
-        {% include "layout/script.html" %}
+<div class="container-fluid">
+    <div class="row justify-content-center" style="padding:35px;">
+    {% for cam in cameras %}
+      {% if cam.cam_status %}
+            <a href="/cams/gorsel/{{cam.id}}/" class="mt-3 ml-2">
+            <div class="card rounded bg-light" style='padding:15px;'>
+                <img src="{{ cam.cam_url }}" width="420" height="420"/>
+                <br>
+                <p class="btn btn-danger">{{cam.cam_name}}</p>
+            </div>
+            </a>
+            {% else %}
+            <a href="#" class="mt-3 ml-2">
+            <div class="card rounded bg-light" style='padding:15px;'>
+                <div class="bg-dark" style="height:420px;width:420px;padding:130px;">
+                    <span class="mt-4">Kamera aktif değil</span>
+                </div><br>
+                <p class="btn btn-danger">{{cam.cam_name}}</p>
+             </div>
+             </a>
+             {% endif %}
+    {% endfor %}
+    </div>
+</div>
+
+
+{% include "layout/script.html" %}  
 {% endblock body %}
 </html>

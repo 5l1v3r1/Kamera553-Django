@@ -3,9 +3,9 @@ from django.forms import ValidationError
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.contrib import  messages
+from .models import camera
 import re
 regex1="[\w\-]+"
-regex2="^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
 
 
 class CameraForm(forms.Form):
@@ -20,52 +20,19 @@ class CameraForm(forms.Form):
     def clean(self):
         cam_name=self.cleaned_data.get("camName")
         cam_url=self.cleaned_data.get("camUrl")
+        cameracount=camera.objects.filter(cam_name=cam_name).count()
+        print (cameracount)
         Errors=""
         g=0
-        if cam_name==None or  cam_name=="" or  cam_url==None or cam_url==""  :
-            Errors+="Kamera Adı Alanı Boş Geçilemez?\n"
-            g+=1
-        else:
-            if not re.search(regex1,cam_name) :
-                Errors+="Kamera Adı İçin Geçersiz Karakter!\n"
+        if cameracount==0:
+            if cam_name==None or  cam_name=="" or  cam_url==None or cam_url==""  :
+                Errors+="Kamera Adı Alanı Boş Geçilemez?\n"
                 g+=1
-            if  not re.search(regex2,cam_url) :
-                Errors+="Kamera URL İçin Geçersiz Karakter!\n"
-                g+=1
-        if g>0:
-            values={
-                "Errors":Errors,
-                "Durum":"0"
-            }
-            return values
-
-
-
-        values = {
-            "camName": cam_name,
-            "camUrl": cam_url,
-            "Durum":"1"
-        }
-
-        return values
-
-class AlertForm(forms.Form):
-    a_start = forms.TimeField(label="Başlangıç Saati",required=True,
-                               help_text='Lütfen Seçim Yapınız!',
-                               widget=forms.TimeInput(attrs={'class': 'form-control rounded-0'}))
-    a_end = forms.TimeField(label="Bitiş Saati",required=True,
-                                help_text='Lütfen Seçim Yapınız',
-                                widget=forms.TimeInput(attrs={'class': 'form-control rounded-0'}))
-
-    def clean(self):
-        starttime=self.cleaned_data.get("a_start")
-        endtime=self.cleaned_data.get("a_end")
-        Errors=""
-        g=0
-        if a_start==None or  a_start=="" or  a_end==None or a_end==""  :
-            Errors+="Saat Seçimlerini Yapın\n"
-            g+=1
-        
+            else:
+                if not re.search(regex1,cam_name) :
+                    Errors+="Kamera Adı İçin Geçersiz Karakter!\n"
+                    g+=1
+                
             if g>0:
                 values={
                     "Errors":Errors,
@@ -75,8 +42,54 @@ class AlertForm(forms.Form):
 
 
 
+            values = {
+                "camName": cam_name,
+                "camUrl": cam_url,
+                "Durum":"1"
+            }
+
+            return values
+        else:
+            Errors+="Bu Ada Sahip Bir Kamera Daha Önce Eklenmiş!"
+            values={
+                "Errors":Errors,
+                "Durum":"0"
+            }
+            return values
+
+
+
+class AlertForm(forms.Form):
+    a_start = forms.TimeField(label="Başlangıç Saati",required=True,
+                               help_text='Saat:Dakika Şeklinde Giriş Yapınız',
+                               widget=forms.TimeInput(attrs={'class': 'form-control rounded-0','placeholder':'Saat Seçin'}))
+    a_end = forms.TimeField(label="Bitiş Saati",required=True,
+                                help_text='Saat:Dakika Şeklinde Giriş Yapınız',
+                                widget=forms.TimeInput(attrs={'class': 'form-control rounded-0','placeholder':'Saat Seçin'}))
+
+    def clean(self):
+        starttime=self.cleaned_data.get("a_start")
+        endtime=self.cleaned_data.get("a_end")
+        Errors=""
+        g=0
+        if starttime==None or  starttime=="" or  endtime==None or endtime==""  :
+            Errors+="Saat:Dakika Formatını Doğru Girdiğinizden Emin olun\n"
+            g+=1
+        
+            if g>0:
+                values={
+                    "Errors":Errors,
+                    "Durum":"0"
+                    
+                }
+                return values
+
+
+
         values = {
-            "Durum":"1"
+            "Durum":"1",
+            "starttime":starttime,
+            "endtime":endtime
         }
 
         return values

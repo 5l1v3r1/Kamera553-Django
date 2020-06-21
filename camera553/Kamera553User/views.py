@@ -64,3 +64,4 @@ def logoutUser(request):
 
 def get_image(request):
     return render(request, "camera/yayin.html")
+

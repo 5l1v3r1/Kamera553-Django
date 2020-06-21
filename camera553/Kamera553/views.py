@@ -1,32 +1,15 @@
 from django.shortcuts import render,redirect
 from .models import camera,alertme
-from django.http import HttpResponse,HttpResponseNotAllowed
+from django.http import HttpResponse,HttpResponseNotAllowed,HttpResponseRedirect
 from .forms import CameraForm,AlertForm
 from django.http import JsonResponse
 from django.contrib import  messages
 import xml.etree.cElementTree as ET
+import subprocess
 import os
+import shutil
 
 # Create your views here.
-def fetch_cam(owner_id,cam_id):
-    print("fetch cam çalıştı")
-    path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'output'))
-    x=1
-    images=[]
-    reqfilename="{}-{}.xml".format(owner_id,cam_id)
-    print("reqfile is: "+reqfilename)
-    print(path+"/"+reqfilename)
-    if os.path.exists(path+"/"+reqfilename):
-                print("Girdi")
-                openfile = ET.parse(path+"/"+reqfilename)
-                root = openfile.getroot()
-                for okuma in root.iter("code"):
-                    images.append({"image"+str(x):okuma.text})
-                    
-                    x+=1
-                print(images)
-                return images
-    
 
 
 def showcams(request):
@@ -45,39 +28,42 @@ def showcams(request):
                     newcam.save()
                     print("saved")
                     messages.info(request,"Kayıt Başarıyla Oluşturuldu")
+                    dosyapath = "E:/Code/Python/Development/Kamera553-Django/camera553/static/important/dontopen/important.py"
+                    hedefpath = f"C:/YoloV4/darknet/build/darknet/x64/{camName}.py"
+                    shutil.copy(dosyapath,hedefpath)
                     return redirect("/cams/")
                 else:
                     messages.info(request,Cam.cleaned_data.get("Errors"))
-                    cameras=camera.objects.filter(owner_id=request.user.id)
+                    cameras=list(camera.objects.filter(owner_id=request.user.id).values())
                     form=CameraForm()
                     
                     data={
                         "title":"Kamera Ekleme Sayfası",
                         "form":form,
-
                         "cameras":cameras
+                        
                     }
                     return render(request,'camera/index.html',data)
             else:
-                cameras=camera.objects.filter(owner_id=request.user.id)
+                cameras=list(camera.objects.filter(owner_id=request.user.id).values())
+
                 data={
                     "title":"Kamera Ekleme Sayfası",
                     "form":Cam,
-
                     "cameras":cameras
+
+                    
                 }
                 return render(request,'camera/index.html',data)
         else:
             cameras=list(camera.objects.filter(owner_id=request.user.id).values())
-            print(cameras)
-            print(type(cameras))
+            
             form=CameraForm()
 
             data={
                 "title":"Kamera Ekleme Sayfası",
                 "form":form,
-
-                "cameras":cameras,
+                "cameras":cameras
 
             }
             
@@ -95,45 +81,107 @@ def showalerts(request):
             if Alert.is_valid():
                 print("kamera formu geçerli")
                 if Alert.cleaned_data.get("Durum")=="1":
-                    a_start=Alert.cleaned_data.get("a_start")
-                    a_end=Alert.cleaned_data.get("a_end")
-                    newalert=alertme()
-                    newalert.a_start=a_start
-                    newalert.a_end=a_end
-                    newalert.save()
-                    print("saved")
-                    messages.info(request,"Kayıt Başarıyla Oluşturuldu")
-                    return redirect("/alerts/")
-                else:
-                    messages.info(request,Alert.cleaned_data.get("Errors"))
+                    alertcount=alertme.objects.count()
+                    if alertcount==0:
+                        a_start=Alert.cleaned_data.get("starttime")
+                        a_end=Alert.cleaned_data.get("endtime")
+                        newalert=alertme()
+                        newalert.a_start=a_start
+                        newalert.a_end=a_end
+                        newalert.save()
+                        print("saved")
+                        messages.info(request,"Kayıt Başarıyla Oluşturuldu")
+                        return redirect("/cams/alerts/")
+                    else:
+                        messages.info(request,"Zaten Bir Alarmınız Mevcut!")   
+                        return redirect("/cams/alerts/") 
 
-                    
-                    
-                    data={
-                        "title":"İnsan Alarmı Saati Ekleme Sayfası",
-                        "form":alert,
-
-
-                    }
-                    return render(request,'alert/index.html',data)
-        else:
+            else:
+                messages.info(request,Alert.cleaned_data.get("Errors"))
                 
-            data={
+                    
+                    
+                data={
+                    "title":"İnsan Alarmı Saati Ekleme Sayfası",
+                    "form":alert,
+
+
+                }
+                return render(request,'alert/index.html',data)
+        else:
+            alertdata=list(alertme.objects.all().values())
+            print(alertdata)
+            if len(alertdata)==0:
+                data={
+                    "title":"İnsan Alarmı Saati Ekleme Sayfası",
+                    "form":alert
+                    
+                
+                }
+            else:
+                 data={
                 "title":"İnsan Alarmı Saati Ekleme Sayfası",
-                "form":alert,
-
-
-            }
+                "alertdata":alertdata,
+                
+                
+            }   
             return render(request,'alert/index.html',data)
     else:
         return redirect("/")   
 
+def kameragoster(request,camid):
+    if request.user.id:
+        data = {
+            'camid':camid
+        }
+        return render(request, "camera/kameraizle.html",data)
+    else:
+        return redirect("/")      
+
+def resimverisi(request,camid):
+    if request.user.id:
+        if request.method=="GET":
+            cameras= camera.objects.filter(owner_id=request.user.id).filter(id=int(camid)).values()
+            for deger in cameras:
+                return HttpResponse(deger["cam_image"])
+    else:
+        return redirect("/")
+
+def delAlert(request):
+    print("Ana view geldi")
+    if request.user.id:
+        print("User id geldi")
+        if request.method=="POST":
+            print("alertin postu çalıştı")
+            alerts=alertme.objects.all()
+            for alert in alerts:
+                print(alert)
+                alertme.objects.get(id=alert.id).delete()
+            return HttpResponseRedirect("/cams/alerts/")
+        else:
+            return  HttpResponseRedirect("/cams/alerts/")
+    else:
+        print("user id gelmedi")
+        return  HttpResponseRedirect("/cams/alerts/")   
+
+def on(request,camname):
+    fh = open("NUL","w")
+    subprocess.Popen(['python.exe',f'C:/YoloV4/darknet/build/darknet/x64/{camname}.py',"C:/YoloV4"],stdout = fh, stderr = fh)
+    camera.objects.filter(cam_name=camname).update(cam_status=True)
+    return redirect("/cams/")
 
 
-def resimverisi(request):
-    if request.method=="GET":
-        cameras= camera.objects.filter(owner_id=request.user.id).fiter(id=request.GET.get('camid', None)).values()
-        for deger in cameras:
-            return HttpResponse(deger["cam_image"])
+def off(request,camname):
+    camera.objects.filter(cam_name=camname).update(cam_status=False)
+    return redirect("/cams/")
 
+def delcam(request,camname):
+    camera.objects.filter(cam_name=camname).delete()
+    os.remove(f"C:/YoloV4/darknet/build/darknet/x64/{camname}.py")
+    return redirect("/cams/")
 
+def showreports(request):
+    if request.user.id:
+        return render(request,"reports/index.html")
+    else:
+        return redirect("/")

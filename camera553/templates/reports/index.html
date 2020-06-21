@@ -1,0 +1,34 @@
+{% include "layout/head.html" %}
+{% block body %}
+        {% include "layout/nav.html" %}
+        <li class="navbar-item"></li>
+    <a class="nav-link" href="/">
+        Anasayfa 
+    </a>
+</li>
+{% if user.id %}
+<li class="navbar-item">
+    <a class="nav-link" href="/cams/">
+        Kameralar <span class="sr-only" >(current)</span>
+    </a>
+</li>
+<li class="navbar-item">
+    <a class="nav-link " href="/cams/alerts/">
+    Alarmlar
+    </a>
+    </li>
+<li class="navbar-item">
+    <a class="nav-link active" href="/cams/reports/">
+    Raporlar
+    </a>
+</li>
+{% endif %}
+{% include "layout/nav2.html" %}
+{% if user.id %}
+    <div class="d-flex justify-content-center">
+        BAŞARILI
+    </div>
+{% endif %}
+
+{% include "layout/script.html" %}
+{% endblock body %}

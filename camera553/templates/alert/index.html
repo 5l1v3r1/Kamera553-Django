@@ -8,32 +8,38 @@
 </li>
 {% if user.id %}
 <li class="navbar-item">
-    <a class="nav-link active" href="/cams/">
+    <a class="nav-link" href="/cams/">
         Kameralar <span class="sr-only" >(current)</span>
     </a>
 </li>
 <li class="navbar-item">
-    <a class="nav-link " href="/cams/alerts/">
+    <a class="nav-link active " href="/cams/alerts/">
     Alarmlar
     </a>
     </li>
+<li class="navbar-item">
+    <a class="nav-link " href="/cams/reports/">
+    Raporlar
+    </a>
+</li>
 {% endif %}
 {% include "layout/nav2.html" %}
 
-        {% include "layout/script.html" %}
-        {% if user.id %}
-        <div class="d-flex justify-content-center">
-        <form method="POST" action="/cams/alerts/" name="alertForm" class=" mt-4" style="padding:50px;" id="MainForm">
-            {% csrf_token %}
-        <p>
-            <a class="btn btn-primary" data-toggle="collapse" href="#collapsealert" role="button" aria-expanded="false" aria-controls="collapsecam">
+
+{% if user.id %}
+    <div class="d-flex justify-content-center">
+        
+    {% if form %}        
+    <form method="POST" action="/cams/alerts/" name="alertForm" class=" mt-4" style="padding:50px;" id="MainForm">
+        {% csrf_token %}
+            <div class="d-flex justify-content-center">
+            <a class="btn btn-warning btn-block rounded-0" style="padding-left:82px;padding-right:82px;" data-toggle="collapse" href="#collapsealert" role="button" aria-expanded="false" aria-controls="collapsecam">
                 Alarm Saati Ekle
             </a>
-          </p>
-          <div class="collapse" id="collapsealert">
+            </div>
+          <div class="collapse justify-content-center mt-4" id="collapsealert">
             <div class="card card-body">
-
-                    {{ form.as_p }}
+                {{ form.as_p }}
                 <br>
                 <input type="submit" value="Kaydet" class="btn btn-success rounded-0 btn-block">
                 <br>
@@ -44,9 +50,43 @@
             </div>
             </div>
           </div>
+    {% endif %}      
+          {% if alertdata %}
+          <form method="POST" action="/cams/alerts/delalert" name="tableForm" class=" mt-4" style="padding:50px;" id="secondForm">
+            {% csrf_token %}
+            {% for alert in alertdata %}
+            <table class="table">
+                <tr>
+                    
+                    <th>Başlangıç Saati</th>
+                    <th>Bitiş Saati</th>
+                    <th></th>
+                  </tr>
+                <tr>
 
+                    <td>
+                        {{alert.a_start}}
+                    </td>
+                    <td>
+                        {{alert.a_end}}
+                    </td>
+                    <td>
+                        <p>
+                            <button type="submit" class="btn btn-danger text-white rounded-0" >
+                                Sil
+                            </button>
+                    </td>
+                </tr>
+            <table>
+            </form>
+            {% endfor %}
+          {%endif%}
         {% endif %}
 
     </div>
+
+
+
+    {% include "layout/script.html" %}
 {% endblock body %}
 </html>
