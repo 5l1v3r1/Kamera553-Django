@@ -128,12 +128,12 @@ def showalerts(request):
     else:
         return redirect("/")   
 
-def kameragoster(request):
-    return render(request, "camera/kameraizle.html")
+
 
 def resimverisi(request):
-    cameras= camera.objects.filter(owner_id=request.user.id).values()
-    for deger in cameras:
-        return HttpResponse(deger["cam_image"])
+    if request.method=="GET":
+        cameras= camera.objects.filter(owner_id=request.user.id).fiter(id=request.GET.get('camid', None)).values()
+        for deger in cameras:
+            return HttpResponse(deger["cam_image"])
 
 

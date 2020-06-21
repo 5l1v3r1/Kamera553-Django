@@ -49,7 +49,7 @@
             <div class="d-flex justify-content-center">
             {% for cam in cameras %}
                 <div class="card" style='padding: 25px;'>
-                <a href="www.google.com">
+                <a href="/cams/vericek/?camid={{cam.id}}">
                     <img src="http://82.65.5.211:8082/mjpg/video.mjpg" width="420" height="420"/>
                     {{cam.cam_name}}
                 </a>

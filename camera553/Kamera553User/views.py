@@ -4,7 +4,7 @@ from .forms import RegisterForm,LoginForm
 from django.contrib import  messages
 from django.contrib.auth.models import User
 from django.contrib.auth import login,authenticate,logout
-import requests
+
 
 def register(request):
     if request.method == "POST":
