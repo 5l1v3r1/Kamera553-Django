@@ -20,5 +20,6 @@ class alertme(models.Model):
 class reports(models.Model):
     r_insansay=models.IntegerField(blank=False,null=False,verbose_name="İnsan Sayısı")
     r_tarih = models.DateTimeField(default=datetime.now,verbose_name="Tarih")
+    r_camid= models.IntegerField(blank=False, null= False, default=-1 , verbose_name="Kamera Id si")
 
 # Create your models here.

@@ -49,7 +49,7 @@ def cvDrawBoxes(detections, img):
 
         gecerlizaman = datetime.datetime.now().time().minute
         if(gecerlizaman == hedefzaman):
-            cursor.execute(f"""insert into "Kamera553_reports" (r_insansay) VALUES ({degermax})""")
+            cursor.execute(f"""insert into "Kamera553_reports" (r_insansay,r_camid) VALUES ({degermax},{camid})""")
             degermax = 0
             if(gecerlizaman + periot > 60):
                     hedefzaman = gecerlizaman + periot - 60
@@ -88,6 +88,8 @@ def alarmvekamerakontrol():
                                 for satir in durum:
                                     saatbaslangic = satir[0]
                                     saatbitis = satir[1]
+                                    print(type(saatbaslangic))
+                                    print(type(saatbitis))
                         else:
                                 saatbaslangic = 0
                                 saatbitis = 0

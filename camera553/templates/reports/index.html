@@ -1,5 +1,5 @@
 {% include "layout/head.html" %}
-{% block body %}
+<body onload="bas(1,'veriyok')">
         {% include "layout/nav.html" %}
         <li class="navbar-item"></li>
     <a class="nav-link" href="/">
@@ -25,10 +25,104 @@
 {% endif %}
 {% include "layout/nav2.html" %}
 {% if user.id %}
-    <div class="d-flex justify-content-center">
-        BAŞARILI
-    </div>
+<div class="d-flex justify-content-center mt-4">
+<div class="chart-container" style="height:70%;width:70%;">
+        <canvas id="chart"></canvas>
+</div>
+</div>
 {% endif %}
+<div class="d-flex justify-content-center">
+<button id="buton1" onclick="bas(1)" class="mt-2 btn btn-danger rounded ml-2">1 Dakika</button>
+<button id="buton2" onclick="bas(2)" class="mt-2 btn btn-danger rounded ml-2">5 Dakika</button>
+<button id="buton3" onclick="bas(3)" class="mt-2 btn btn-danger rounded ml-2">15 Dakika</button>
+<button id="buton4" onclick="bas(4)" class="mt-2 btn btn-danger rounded ml-2">30 Dakika</button>
+<button id="buton5" onclick="bas(5)" class="mt-2 btn btn-danger rounded ml-2">1 Saat</button>
+<button id="buton6" onclick="bas(6)" class="mt-2 btn btn-danger rounded ml-2">1 Gün</button>
+<button id="buton7" onclick="bas(7)" class="mt-2 btn btn-danger rounded ml-2">1 Ay</button>
+<button id="buton8" onclick="bas(8)" class="mt-2 btn btn-danger rounded ml-2">6 Ay</button>
+<button id="buton9" onclick="bas(9)" class="mt-2 btn btn-danger rounded ml-2">1 Yıl</button>
+</div>
+<input id="gizli" type="hidden" value="buton1">
 
 {% include "layout/script.html" %}
-{% endblock body %}
+<script type="text/javascript" src="/static/script/Chart.js"></script>
+<script>
+    function bas(number,id)
+    {
+        if(id != "veriyok"){
+        document.getElementById("buton"+number.toString()).classList.remove("btn-danger");
+        document.getElementById("buton"+number.toString()).classList.add("btn-warning");
+        var eskiid = document.getElementById('gizli').value;
+        document.getElementById("buton"+eskiid).classList.remove("btn-warning");
+        document.getElementById("buton"+eskiid).classList.add("btn-danger");
+        document.getElementById('gizli').value = number;
+        }
+        else{
+            document.getElementById('buton1').classList.remove("btn-danger");
+            document.getElementById('buton1').classList.add("btn-warning");
+            document.getElementById('gizli').value = '1';
+        }
+        $.ajax({
+            method:'GET',
+            url:'/cams/reports/data/1/',
+            success:function(data){
+                console.log(data);
+                new Chart(document.getElementById("chart"), {
+                    type: 'line',
+                    data: {
+                        labels: data.label_data,
+                        datasets: [
+                        {
+                            label: "female viewership %",
+                            backgroundColor: "rgba(221, 65, 83, 0.7)",
+                            borderColor : "rgba(221, 65, 83, 1)",
+                            pointBackgroundColor: "rgba(221, 65, 83, 1)",
+                            data: data.female_data,
+                        },
+                    ]
+                    },
+                    options: {
+                        legend: {
+                            labels: {
+                                fontSize: 18
+                            }
+                        },
+                        title: {
+                            display : true,
+                            text : "Gender Wise Youtube Viewership",
+                            fontSize : 22.0
+                         },
+                        scales: {
+                            yAxes: [{
+                                ticks:{
+                                    beginAtZero: true,
+                                    fontSize:15.0,
+                                },
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Percentage',
+                                    fontSize :20.0,
+                                }
+                            }],
+                            xAxes: [{
+                                ticks:{
+                                  fontSize: 15.0,
+                                },
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Age Groups',
+                                    fontSize : 20.0,
+                                }
+                            }]
+                          },
+                        responsive: true,
+                    }
+                });
+            },
+            error:function(data){
+                console.log('Error!');
+            }
+        });
+    }
+</script>
+</body>
