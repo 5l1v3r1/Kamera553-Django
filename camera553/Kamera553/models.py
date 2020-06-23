@@ -18,10 +18,12 @@ class alertme(models.Model):
     a_start=models.TimeField(max_length=5,blank=False,null=False,verbose_name="Başlangıç Saati")
     a_end=models.TimeField(max_length=5,blank=False,null=False,verbose_name="Başlangıç Saati")
     a_status=models.BooleanField(default=True,verbose_name="Kamerda Alarm Durumu")
+    alert_image=models.BinaryField(null=True,verbose_name="Kamera Alarm Görüntüsü/")
 
 class reports(models.Model):
     r_insansay=models.IntegerField(blank=False,null=False,verbose_name="İnsan Sayısı")
     r_tarih = models.DateTimeField(default=datetime.now,verbose_name="Tarih")
     r_camid= models.IntegerField(blank=False, null= False, default=-1 , verbose_name="Kamera Id si")
+    r_yakinsay=models.IntegerField(blank=False,null=False,verbose_name="Yakın Duran İnsan Sayısı")
 
 # Create your models here.
