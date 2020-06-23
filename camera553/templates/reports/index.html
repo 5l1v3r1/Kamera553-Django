@@ -26,7 +26,7 @@
 {% include "layout/nav2.html" %}
 {% if user.id %}
 <div class="d-flex justify-content-center mt-4">
-<div class="chart-container" style="height:70%;width:70%;">
+<div id="sambali" class="chart-container" style="height:80%;width:80%;">
         <canvas id="chart"></canvas>
 </div>
 </div>
@@ -53,31 +53,36 @@
         document.getElementById("buton"+number.toString()).classList.remove("btn-danger");
         document.getElementById("buton"+number.toString()).classList.add("btn-warning");
         var eskiid = document.getElementById('gizli').value;
+        if(eskiid != number){
         document.getElementById("buton"+eskiid).classList.remove("btn-warning");
         document.getElementById("buton"+eskiid).classList.add("btn-danger");
         document.getElementById('gizli').value = number;
+            }
         }
         else{
             document.getElementById('buton1').classList.remove("btn-danger");
             document.getElementById('buton1').classList.add("btn-warning");
             document.getElementById('gizli').value = '1';
         }
+        if(number != eskiid){
+        $('#chart').remove()
+        $('#sambali').append('<canvas id="chart"></canvas>')
         $.ajax({
             method:'GET',
-            url:'/cams/reports/data/1/',
+            url:'/cams/reports/data/'+number+'/',
             success:function(data){
                 console.log(data);
-                new Chart(document.getElementById("chart"), {
+                chart = new Chart(document.getElementById("chart"), {
                     type: 'line',
                     data: {
                         labels: data.label_data,
                         datasets: [
                         {
-                            label: "female viewership %",
+                            label: "İnsan Yoğunluğu",
                             backgroundColor: "rgba(221, 65, 83, 0.7)",
                             borderColor : "rgba(221, 65, 83, 1)",
                             pointBackgroundColor: "rgba(221, 65, 83, 1)",
-                            data: data.female_data,
+                            data: data.human_data,
                         },
                     ]
                     },
@@ -89,7 +94,7 @@
                         },
                         title: {
                             display : true,
-                            text : "Gender Wise Youtube Viewership",
+                            text : data.label,
                             fontSize : 22.0
                          },
                         scales: {
@@ -123,6 +128,7 @@
                 console.log('Error!');
             }
         });
+    }
     }
 </script>
 </body>

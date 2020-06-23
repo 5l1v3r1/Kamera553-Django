@@ -1,13 +1,16 @@
 from django.shortcuts import render,redirect
-from .models import camera,alertme
+from .models import camera,alertme,reports
+from django.contrib.auth.models import User
 from django.http import HttpResponse,HttpResponseNotAllowed,HttpResponseRedirect
 from .forms import CameraForm,AlertForm
 from django.http import JsonResponse
 from django.contrib import  messages
-import xml.etree.cElementTree as ET
+from django.db import connection
 import subprocess
 import os
 import shutil
+from datetime import datetime
+import locale
 
 # Create your views here.
 
@@ -17,19 +20,26 @@ def showcams(request):
         if request.method=="POST":
             Cam=CameraForm(request.POST)
             if Cam.is_valid():
-                print("kamera formu geçerli")
+             
                 if Cam.cleaned_data.get("Durum")=="1":
+                    a=""
                     camName=Cam.cleaned_data.get("camName")
                     camUrl=Cam.cleaned_data.get("camUrl")
                     newcam=camera()
                     newcam.cam_name=camName
                     newcam.cam_url=camUrl
                     newcam.owner_id=request.user.id
+                    usermail=User.objects.filter(id=request.user.id).values()
+                    for mail in usermail:
+                        a=mail["email"]
+                        
+                        print(mail["email"])
+                    newcam.cam_ownermail=a
                     newcam.save()
-                    print("saved")
-                    messages.info(request,"Kayıt Başarıyla Oluşturuldu")
-                    dosyapath = "E:/Code/Python/Development/Kamera553-Django/camera553/static/important/dontopen/important.py"
-                    hedefpath = f"C:/YoloV4/darknet/build/darknet/x64/{camName}.py"
+                    if camName == "islem":
+                        messages.info(request,"Kayıt Başarıyla Oluşturuldu")
+                        dosyapath = "E:/Code/Python/Development/Kamera553-Django/camera553/static/important/dontopen/important.py"
+                        hedefpath = f"C:/YoloV4/darknet/build/darknet/x64/{camName}.py"
                     shutil.copy(dosyapath,hedefpath)
                     return redirect("/cams/")
                 else:
@@ -77,9 +87,7 @@ def showalerts(request):
         alert=AlertForm()
         if request.method=="POST":
             Alert=AlertForm(request.POST)
-            
             if Alert.is_valid():
-                print("kamera formu geçerli")
                 if Alert.cleaned_data.get("Durum")=="1":
                     alertcount=alertme.objects.count()
                     if alertcount==0:
@@ -89,8 +97,9 @@ def showalerts(request):
                         newalert.a_start=a_start
                         newalert.a_end=a_end
                         newalert.save()
-                        print("saved")
+                       
                         messages.info(request,"Kayıt Başarıyla Oluşturuldu")
+                        camera.objects.update(cam_alarmstatus=True)
                         return redirect("/cams/alerts/")
                     else:
                         messages.info(request,"Zaten Bir Alarmınız Mevcut!")   
@@ -110,7 +119,7 @@ def showalerts(request):
                 return render(request,'alert/index.html',data)
         else:
             alertdata=list(alertme.objects.all().values())
-            print(alertdata)
+           
             if len(alertdata)==0:
                 data={
                     "title":"İnsan Alarmı Saati Ekleme Sayfası",
@@ -148,37 +157,44 @@ def resimverisi(request,camid):
         return redirect("/")
 
 def delAlert(request):
-    print("Ana view geldi")
     if request.user.id:
-        print("User id geldi")
         if request.method=="POST":
-            print("alertin postu çalıştı")
             alerts=alertme.objects.all()
             for alert in alerts:
-                print(alert)
+            
                 alertme.objects.get(id=alert.id).delete()
+                camera.objects.update(cam_alarmstatus=False)
             return HttpResponseRedirect("/cams/alerts/")
         else:
             return  HttpResponseRedirect("/cams/alerts/")
     else:
-        print("user id gelmedi")
+       
         return  HttpResponseRedirect("/cams/alerts/")   
 
 def on(request,camname):
-    fh = open("NUL","w")
-    subprocess.Popen(['python.exe',f'C:/YoloV4/darknet/build/darknet/x64/{camname}.py',"C:/YoloV4"],stdout = fh, stderr = fh)
-    camera.objects.filter(cam_name=camname).update(cam_status=True)
-    return redirect("/cams/")
-
+    if request.user.id:
+        if camname == "islem":
+            fh = open("NUL","w")
+            subprocess.Popen(['python.exe',f'C:/YoloV4/darknet/build/darknet/x64/{camname}.py',"C:/YoloV4"],stdout = fh, stderr = fh)
+            camera.objects.filter(cam_name=camname).update(cam_status=True)
+        return redirect("/cams/")
+    else:
+        return redirect("/")
 
 def off(request,camname):
-    camera.objects.filter(cam_name=camname).update(cam_status=False)
-    return redirect("/cams/")
+    if request.user.id:
+        camera.objects.filter(cam_name=camname).update(cam_status=False)
+        return redirect("/cams/")
+    else:
+        return redirect("/")
 
 def delcam(request,camname):
-    camera.objects.filter(cam_name=camname).delete()
-    os.remove(f"C:/YoloV4/darknet/build/darknet/x64/{camname}.py")
-    return redirect("/cams/")
+    if request.user.id:
+        camera.objects.filter(cam_name=camname).delete()
+        os.remove(f"C:/YoloV4/darknet/build/darknet/x64/{camname}.py")
+        return redirect("/cams/")
+    else:
+        return redirect("/")
 
 def showreports(request):
     if request.user.id:
@@ -186,71 +202,152 @@ def showreports(request):
     else:
         return redirect("/")
 
-def get_data(request,type):
-    data = {
-            'male_data': [41, 26, 57, 47, 49, 40, 67, 68, 24, 26],
-            'female_data': [62, 39, 67, 33, 58, 67, 50, 48, 21, 30],
-            'label_data': ['13-17', '18-24', '25-34', '34-44', '45-54', '55-64'],
-    }
-    if type == 1:
-        data = {
-            'male_data': [41, 26, 57, 47, 49, 40, 67, 68, 24, 26],
-            'female_data': [62, 39, 67, 33, 58, 67, 50, 48, 21, 30],
-            'label_data': ['13-17', '18-24', '25-34', '34-44', '45-54', '55-64'],
-        }
-    elif type == 2:
-        data = {
-            'male_data': [41, 26, 57, 47, 49, 40, 67, 68, 24, 26],
-            'female_data': [62, 39, 67, 33, 58, 67, 50, 48, 21, 30],
-            'label_data': ['13-17', '18-24', '25-34', '34-44', '45-54', '55-64'],
-        }
-    elif type == 3:
-        data = {
-            'male_data': [41, 26, 57, 47, 49, 40, 67, 68, 24, 26],
-            'female_data': [62, 39, 67, 33, 58, 67, 50, 48, 21, 30],
-            'label_data': ['13-17', '18-24', '25-34', '34-44', '45-54', '55-64'],
-        }
-    elif type == 4:
-        data = {
-            'male_data': [41, 26, 57, 47, 49, 40, 67, 68, 24, 26],
-            'female_data': [62, 39, 67, 33, 58, 67, 50, 48, 21, 30],
-            'label_data': ['13-17', '18-24', '25-34', '34-44', '45-54', '55-64'],
-        }
-    elif type == 5:
-        data = {
-            'male_data': [41, 26, 57, 47, 49, 40, 67, 68, 24, 26],
-            'female_data': [62, 39, 67, 33, 58, 67, 50, 48, 21, 30],
-            'label_data': ['13-17', '18-24', '25-34', '34-44', '45-54', '55-64'],
-        }
-    elif type == 6:
-        data = {
-            'male_data': [41, 26, 57, 47, 49, 40, 67, 68, 24, 26],
-            'female_data': [62, 39, 67, 33, 58, 67, 50, 48, 21, 30],
-            'label_data': ['13-17', '18-24', '25-34', '34-44', '45-54', '55-64'],
-        }
-    elif type == 7:
-        data = {
-            'male_data': [41, 26, 57, 47, 49, 40, 67, 68, 24, 26],
-            'female_data': [62, 39, 67, 33, 58, 67, 50, 48, 21, 30],
-            'label_data': ['13-17', '18-24', '25-34', '34-44', '45-54', '55-64'],
-        }
-    elif type == 8:
-        data = {
-            'male_data': [41, 26, 57, 47, 49, 40, 67, 68, 24, 26],
-            'female_data': [62, 39, 67, 33, 58, 67, 50, 48, 21, 30],
-            'label_data': ['13-17', '18-24', '25-34', '34-44', '45-54', '55-64'],
-        }
-    elif type == 9:
-        data = {
-            'male_data': [41, 26, 57, 47, 49, 40, 67, 68, 24, 26],
-            'female_data': [62, 39, 67, 33, 58, 67, 50, 48, 21, 30],
-            'label_data': ['13-17', '18-24', '25-34', '34-44', '45-54', '55-64'],
-        }
+def activatealert(request):
+    if request.user.id:
+        alertme.objects.update(a_status=True)
+        return redirect("/cams/alerts/")
     else:
-        data = {
-            'male_data': [41, 26, 57, 47, 49, 40, 67, 68, 24, 26],
-            'female_data': [62, 39, 67, 33, 58, 67, 50, 48, 21, 30],
-            'label_data': ['13-17', '18-24', '25-34', '34-44', '45-54', '55-64'],
-        }
-	
+        return redirect("/")
+
+def get_data(request,type):
+    locale.setlocale(locale.LC_ALL,"tr")
+    cursor = connection.cursor()
+    tarih = []
+    insanavg = []
+    yazi = ""
+    if type == "1":
+        cursor.execute(""" SELECT 
+        to_timestamp(floor((extract('epoch' from r_tarih) / 60)) * 60)
+        AT TIME ZONE 'UTC' as interval_alias,
+        avg(r_insansay) as insan
+        FROM "Kamera553_reports"
+        GROUP BY interval_alias
+        ORDER BY interval_alias """)
+        veri = cursor.fetchall()
+        for bomba in veri[-10:]:
+            tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
+            insanavg.append(int(bomba[1]))
+        yazi = "1 Dakikaya Göre İnsan Yoğunluğu"
+    elif type == "2":
+        cursor.execute(""" SELECT 
+        to_timestamp(floor((extract('epoch' from r_tarih) / 300)) * 300)
+        AT TIME ZONE 'UTC' as interval_alias,
+        avg(r_insansay) as insan
+        FROM "Kamera553_reports"
+        GROUP BY interval_alias
+        ORDER BY interval_alias """)
+        veri = cursor.fetchall()
+        for bomba in veri[-10:]:
+            tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
+            insanavg.append(int(bomba[1]))
+        yazi = "5 Dakikaya Göre İnsan Yoğunluğu"
+    elif type == "3":
+        cursor.execute(""" SELECT 
+        to_timestamp(floor((extract('epoch' from r_tarih) / 900)) * 900)
+        AT TIME ZONE 'UTC' as interval_alias,
+        avg(r_insansay) as insan
+        FROM "Kamera553_reports"
+        GROUP BY interval_alias
+        ORDER BY interval_alias """)
+        veri = cursor.fetchall()
+        for bomba in veri[-10:]:
+            tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
+            insanavg.append(int(bomba[1]))
+        yazi = "15 Dakikaya Göre İnsan Yoğunluğu"
+    elif type == "4":
+        cursor.execute(""" SELECT 
+        to_timestamp(floor((extract('epoch' from r_tarih) / 1800)) * 1800)
+        AT TIME ZONE 'UTC' as interval_alias,
+        avg(r_insansay) as insan
+        FROM "Kamera553_reports"
+        GROUP BY interval_alias
+        ORDER BY interval_alias """)
+        veri = cursor.fetchall()
+        for bomba in veri[-10:]:
+            tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
+            insanavg.append(int(bomba[1]))
+        yazi = "30 Dakikaya Göre İnsan Yoğunluğu"
+    elif type == "5":
+        cursor.execute(""" SELECT 
+        to_timestamp(floor((extract('epoch' from r_tarih) / 3600)) * 3600)
+        AT TIME ZONE 'UTC' as interval_alias,
+        avg(r_insansay) as insan
+        FROM "Kamera553_reports"
+        GROUP BY interval_alias
+        ORDER BY interval_alias """)
+        veri = cursor.fetchall()
+        for bomba in veri[-10:]:
+            tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
+            insanavg.append(int(bomba[1]))
+        yazi = "1 Saate Göre İnsan Yoğunluğu"
+    elif type == "6":
+        cursor.execute(""" SELECT 
+        to_timestamp(floor((extract('epoch' from r_tarih) / 86400)) * 86400)
+        AT TIME ZONE 'UTC' as interval_alias,
+        avg(r_insansay) as insan
+        FROM "Kamera553_reports"
+        GROUP BY interval_alias
+        ORDER BY interval_alias """)
+        veri = cursor.fetchall()
+        for bomba in veri[-10:]:
+            tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
+            insanavg.append(int(bomba[1]))
+        yazi = "1 Güne Göre İnsan Yoğunluğu"
+    elif type == "7":
+        cursor.execute(""" SELECT 
+        to_timestamp(floor((extract('epoch' from r_tarih) / 2592000)) * 2592000)
+        AT TIME ZONE 'UTC' as interval_alias,
+        avg(r_insansay) as insan
+        FROM "Kamera553_reports"
+        GROUP BY interval_alias
+        ORDER BY interval_alias """)
+        veri = cursor.fetchall()
+        for bomba in veri[-10:]:
+            tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
+            insanavg.append(int(bomba[1]))
+        yazi = "1 Aya Göre İnsan Yoğunluğu"
+    elif type == "8":
+        cursor.execute(""" SELECT 
+        to_timestamp(floor((extract('epoch' from r_tarih) / 15552000)) * 15552000)
+        AT TIME ZONE 'UTC' as interval_alias,
+        avg(r_insansay) as insan
+        FROM "Kamera553_reports"
+        GROUP BY interval_alias
+        ORDER BY interval_alias """)
+        veri = cursor.fetchall()
+        for bomba in veri[-10:]:
+            tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
+            insanavg.append(int(bomba[1]))
+        yazi = "6 Aya Göre İnsan Yoğunluğu"
+    elif type == "9":
+        cursor.execute(""" SELECT 
+        to_timestamp(floor((extract('epoch' from r_tarih) / 62208000)) * 62208000)
+        AT TIME ZONE 'UTC' as interval_alias,
+        avg(r_insansay) as insan
+        FROM "Kamera553_reports"
+        GROUP BY interval_alias
+        ORDER BY interval_alias """)
+        veri = cursor.fetchall()
+        for bomba in veri[-10:]:
+            tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
+            insanavg.append(int(bomba[1]))
+        yazi = "1 Yıla Göre İnsan Yoğunluğu"
+    else:
+        cursor.execute(""" SELECT 
+        to_timestamp(floor((extract('epoch' from r_tarih) / 900)) * 900)
+        AT TIME ZONE 'UTC' as interval_alias,
+        avg(r_insansay) as insan
+        FROM "Kamera553_reports"
+        GROUP BY interval_alias
+        ORDER BY interval_alias """)
+        veri = cursor.fetchall()
+        for bomba in veri[-10:]:
+            tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
+            insanavg.append(int(bomba[1]))
+        yazi = "30 Dakikaya Göre İnsan Yoğunluğu"
+    data={
+        'label_data':tarih,
+        'human_data':insanavg,
+        'label':yazi,
+    }
     return JsonResponse(data)

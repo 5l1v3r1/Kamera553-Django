@@ -52,7 +52,7 @@
           </div>
     {% endif %}      
           {% if alertdata %}
-          <form method="POST" action="/cams/alerts/delalert" name="tableForm" class=" mt-4" style="padding:50px;" id="secondForm">
+          <form method="POST" action="/cams/alerts/delalert/" name="tableForm" class=" mt-4" style="padding:50px;" id="secondForm">
             {% csrf_token %}
             {% for alert in alertdata %}
             <table class="table">
@@ -60,6 +60,7 @@
                     
                     <th>Başlangıç Saati</th>
                     <th>Bitiş Saati</th>
+                    <th>Alarm Durumu</th>
                     <th></th>
                   </tr>
                 <tr>
@@ -71,10 +72,19 @@
                         {{alert.a_end}}
                     </td>
                     <td>
-                        <p>
-                            <button type="submit" class="btn btn-danger text-white rounded-0" >
-                                Sil
-                            </button>
+                        {% if alert.a_status %}
+                         <p  class="btn btn-success text-white rounded-0" >Açık</p>
+                        {% else %}
+                        <a href="/cams/alerts/activate/"><p class="btn btn-danger text-white rounded-0" >Kapalı</p></a>
+                            
+
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button type="submit" class="btn btn-danger text-white rounded-0" >
+                            Sil
+                        </button>
+                        
                     </td>
                 </tr>
             <table>

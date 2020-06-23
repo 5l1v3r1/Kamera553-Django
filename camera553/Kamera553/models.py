@@ -12,10 +12,12 @@ class camera(models.Model):
     cam_period=models.IntegerField(blank=False, null=False, verbose_name="Periyot",default=1)
     cam_alarmstatus=models.BooleanField(default=False,verbose_name="Alarm Durumu")
     cam_status=models.BooleanField(default=False,verbose_name="Kamerda Durumu")
+    cam_ownermail=models.CharField(max_length=256, blank=False, null= False, verbose_name="Kamera Sahip Email")
 
 class alertme(models.Model):
     a_start=models.TimeField(max_length=5,blank=False,null=False,verbose_name="Başlangıç Saati")
     a_end=models.TimeField(max_length=5,blank=False,null=False,verbose_name="Başlangıç Saati")
+    a_status=models.BooleanField(default=True,verbose_name="Kamerda Alarm Durumu")
 
 class reports(models.Model):
     r_insansay=models.IntegerField(blank=False,null=False,verbose_name="İnsan Sayısı")

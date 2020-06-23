@@ -1,15 +1,30 @@
 from ctypes import *
-import datetime
-import math
-import random
-import os,sys
-import cv2,base64
-import numpy as np
-import time
-import darknet
-import urllib.request as urllib
+from datetime import datetime,time
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
 from itertools import combinations
-import psycopg2
+import math,random,os,sys,cv2,base64,darknet,psycopg2,smtplib
+import numpy as np
+import urllib.request as urllib
+
+
+
+def sendmail():
+    global maildurum
+    maildurum = 0
+    server = smtplib.SMTP(host="smtp.live.com",port=587)
+    message = MIMEMultipart()
+    password = ""
+    message['From'] = "mertcanfidan0635@outlook.com"
+    message['To'] = mail
+    message['Subject'] = 'İzin verilmeyen saatlerde giriş tespiti!'
+    message.attach(MIMEText("İzin verilmeyen giriş!"))
+    server.ehlo()
+    server.starttls()
+    server.login('mertcanfidan0635@outlook.com','mtmuetkftnwspiqz')
+    server.sendmail(message['From'],message['To'],message.as_string())
+    server.quit()
 
 def is_close(p1, p2):
     dst = math.sqrt(p1**2 + p2**2)
@@ -25,7 +40,7 @@ def convertBack(x, y, w, h):
 
 
 def cvDrawBoxes(detections, img):
-    global degermax,hedefzaman
+    global degermax,hedefzaman,maildurum
     if len(detections) > 0:
         centroid_dict = dict()
         objectId = 0
@@ -46,17 +61,48 @@ def cvDrawBoxes(detections, img):
 
         if len(centroid_dict) > degermax:
             degermax = len(centroid_dict)
+        
+        gecerlizaman = datetime.now().time()
+        gecerlidakika = gecerlizaman.minute
 
-        gecerlizaman = datetime.datetime.now().time().minute
-        if(gecerlizaman == hedefzaman):
+        if saatbaslangic != None:
+            if(len(centroid_dict) != 0):
+                if ikincibaslangictime != None:
+                    if gecerlizaman <= bitistime or gecerlizaman >= baslangictime:
+                        cursor.execute("""select a_status from "Kamera553_alertme" """)
+                        deger = cursor.fetchall()
+                        for veri in deger:
+                            if veri[0] == True:
+                                cursor.execute("""update  "Kamera553_alertme" set a_status = false """)
+                                maildurum = 1
+                            else:
+                                pass
+                    else:
+                        pass
+                else:
+                    if gecerlizaman <= bitistime and gecerlizaman >= baslangictime:
+                        cursor.execute("""select a_status from "Kamera553_alertme" """)
+                        deger = cursor.fetchall()
+                        for veri in deger:
+                            if veri[0] == True:
+                                cursor.execute("""update  "Kamera553_alertme" set a_status = false """)
+                                maildurum = 1
+                            else:
+                                pass
+                    else:
+                        pass
+            else:
+                pass
+
+        if(gecerlidakika == hedefzaman):
             cursor.execute(f"""insert into "Kamera553_reports" (r_insansay,r_camid) VALUES ({degermax},{camid})""")
             degermax = 0
-            if(gecerlizaman + periot > 60):
-                    hedefzaman = gecerlizaman + periot - 60
-            elif(gecerlizaman == 60):
+            if(gecerlidakika + periot > 60):
+                    hedefzaman = gecerlidakika + periot - 60
+            elif(gecerlidakika == 60):
                     hedefzaman = periot
             else:
-                    hedefzaman = gecerlizaman + periot
+                    hedefzaman = gecerlidakika + periot
 
         text = "Insan Sayisi: %s" % str(len(centroid_dict))
         text2 = f"Maximum Insan Sayisi: {str(degermax)}"
@@ -71,6 +117,12 @@ netMain = None
 metaMain = None
 altNames = None
 
+def olustur():
+    global ikincibaslangictime,ikincibitistime
+    ikincibaslangictime = time(0,0,0)
+    ikincibitistime = time(23,59,0)
+
+
 def alarmvekamerakontrol():
                 global saatbaslangic,saatbitis
                 cursor.execute(f"""select cam_status,cam_alarmstatus from "Kamera553_camera" where id = {camid}""")
@@ -82,17 +134,30 @@ def alarmvekamerakontrol():
                         exit()
                     else:
                         if alarm_durum == True:
-                            if saatbaslangic == 0:
+                            if saatbaslangic == None:
+                                global bitistime,baslangictime
                                 cursor.execute(f"""select a_start,a_end from "Kamera553_alertme" """)
                                 durum = cursor.fetchall()
                                 for satir in durum:
-                                    saatbaslangic = satir[0]
-                                    saatbitis = satir[1]
-                                    print(type(saatbaslangic))
-                                    print(type(saatbitis))
+                                    saatbaslangic = int(satir[0].strftime("%H"))
+                                    dakikabaslangic = int(satir[0].strftime("%M"))
+                                    saatbitis = int(satir[1].strftime("%H"))
+                                    dakikabitis = int(satir[1].strftime('%M'))
+                                    bitistime = time(saatbitis,dakikabitis,0)
+                                    baslangictime = time(saatbaslangic,dakikabaslangic,0)
+                                    if saatbitis < saatbaslangic:
+                                        olustur()
+                                    elif saatbitis == saatbaslangic:
+                                        if dakikabitis < dakikabitis:
+                                            olustur()
+                                        elif dakikabitis == baslangictime:
+                                            baslangictime = time(23,59,0)
+                                            bitistime = time(0,0,0)
+                                    
                         else:
-                                saatbaslangic = 0
-                                saatbitis = 0
+                                saatbaslangic = None
+                                ikincibaslangictime = None
+
 
 def YOLO():
     global degermax,metaMain, netMain, altNames
@@ -153,7 +218,6 @@ def YOLO():
                 new_height, new_width, channels = img.shape
                 darknet_image = darknet.make_image(new_width, new_height, 3)
                 deger = 1
-            prev_time = time.time()
             frame_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             frame_resized = cv2.resize(frame_rgb,
                                     (new_width, new_height),
@@ -162,9 +226,10 @@ def YOLO():
             detections = darknet.detect_image(netMain, metaMain, darknet_image, thresh=0.25)
             image = cvDrawBoxes(detections, frame_resized)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            print(1/(time.time()-prev_time))
             retval, buffer = cv2.imencode('.jpg', image)
             jpg_as_text = base64.b64encode(buffer)
+            if maildurum == 1:
+                sendmail()
             try:
                 sql_update_query = """Update "Kamera553_camera" set cam_image = %s where id = %s"""
                 cursor.execute(sql_update_query, (jpg_as_text, camid))
@@ -195,7 +260,7 @@ if __name__ == "__main__":
         )
         cursor = connection.cursor()
         try:
-            cursor.execute(f"""select cam_url,cam_period,id from "Kamera553_camera" WHERE cam_name = '{str(os.path.basename(sys.argv[0]))[:-3]}'""")
+            cursor.execute(f"""select cam_url,cam_period,id,cam_ownermail from "Kamera553_camera" WHERE cam_name = '{str(os.path.basename(sys.argv[0]))[:-3]}'""")
             sonuc = cursor.fetchall()
             if len(sonuc) == 0:
                 print("Tanımlı görev bulunamadı!")
@@ -206,18 +271,15 @@ if __name__ == "__main__":
             else:
                 for satir in sonuc:
                         degermax = 0
-                        gecerlizaman = datetime.datetime.now().time().minute
-                        periot = satir[1]
-                        camurl = satir[0]
-                        camid = satir[2]
-                        saatbaslangic = 0
-                        saatbitis = 0
-                        if(gecerlizaman + periot > 60):
-                            hedefzaman = gecerlizaman + periot - 60
-                        elif(gecerlizaman == 60):
+                        gecerlidakika = datetime.now().time().minute
+                        periot,camurl,camid,mail = satir[1],satir[0],satir[2],satir[3]
+                        saatbaslangic,saatbitis,ikincibaslangictime,ikincibitistime,maildurum = None,None,None,None,0
+                        if(gecerlidakika + periot > 60):
+                            hedefzaman = gecerlidakika + periot - 60
+                        elif(gecerlidakika == 60):
                             hedefzaman = periot
                         else:
-                            hedefzaman = gecerlizaman + periot
+                            hedefzaman = gecerlidakika + periot
         except:
             print("Veri çekilirken hata oluştu!")
             print(f"""Error 01: Kamera ismi databasede bulunumadı! İşlem ismi = [{str(os.path.basename(sys.argv[0]))[:-3]}] 
