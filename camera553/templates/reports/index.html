@@ -24,23 +24,35 @@
 </li>
 {% endif %}
 {% include "layout/nav2.html" %}
+{% if cams %}
 {% if user.id %}
-<div class="d-flex justify-content-center mt-4">
+
+<div>
+<button type="button" class="btn btn-primary dropdown-toggle btn-block rounded-0"  data-toggle="collapse" href="#collapsealert" role="button" aria-expanded="false" aria-controls="collapsecam">
+    Kameralar
+  </button>
+    <div class="collapse justify-content-center btn-block mt-1 rounded-0 border" id="collapsealert">
+            {% for cam in cams %}
+            <a class="btn-block mt-0 rounded-0" id='' onclick="window.location.reload();" href="#"><button class="btn btn-block rounded-0" onMouseOver="this.classList.add('btn-primary');" onMouseOut="this.classList.remove('btn-primary');"><center>{{cam}}</center></button></a>
+            {% endfor %}
+        </div>
+</div>
+<div class="d-flex justify-content-center">
 <div id="sambali" class="chart-container" style="height:80%;width:80%;">
         <canvas id="chart"></canvas>
 </div>
 </div>
 {% endif %}
-<div class="d-flex justify-content-center">
-<button id="buton1" onclick="bas(1)" class="mt-2 btn btn-danger rounded ml-2">1 Dakika</button>
-<button id="buton2" onclick="bas(2)" class="mt-2 btn btn-danger rounded ml-2">5 Dakika</button>
-<button id="buton3" onclick="bas(3)" class="mt-2 btn btn-danger rounded ml-2">15 Dakika</button>
-<button id="buton4" onclick="bas(4)" class="mt-2 btn btn-danger rounded ml-2">30 Dakika</button>
-<button id="buton5" onclick="bas(5)" class="mt-2 btn btn-danger rounded ml-2">1 Saat</button>
-<button id="buton6" onclick="bas(6)" class="mt-2 btn btn-danger rounded ml-2">1 Gün</button>
-<button id="buton7" onclick="bas(7)" class="mt-2 btn btn-danger rounded ml-2">1 Ay</button>
-<button id="buton8" onclick="bas(8)" class="mt-2 btn btn-danger rounded ml-2">6 Ay</button>
-<button id="buton9" onclick="bas(9)" class="mt-2 btn btn-danger rounded ml-2">1 Yıl</button>
+<div class="d-flex justify-content-center mb-2">
+<button id="buton1" onclick="bas(1)" class="mt-2 btn btn-danger rounded-pill ml-2">1 Dakika</button>
+<button id="buton2" onclick="bas(2)" class="mt-2 btn btn-danger rounded-pill ml-2">5 Dakika</button>
+<button id="buton3" onclick="bas(3)" class="mt-2 btn btn-danger rounded-pill ml-2">15 Dakika</button>
+<button id="buton4" onclick="bas(4)" class="mt-2 btn btn-danger rounded-pill ml-2">30 Dakika</button>
+<button id="buton5" onclick="bas(5)" class="mt-2 btn btn-danger rounded-pill ml-2">1 Saat</button>
+<button id="buton6" onclick="bas(6)" class="mt-2 btn btn-danger rounded-pill ml-2">1 Gün</button>
+<button id="buton7" onclick="bas(7)" class="mt-2 btn btn-danger rounded-pill ml-2">1 Ay</button>
+<button id="buton8" onclick="bas(8)" class="mt-2 btn btn-danger rounded-pill ml-2">6 Ay</button>
+<button id="buton9" onclick="bas(9)" class="mt-2 btn btn-danger rounded-pill ml-2">1 Yıl</button>
 </div>
 <input id="gizli" type="hidden" value="buton1">
 
@@ -79,10 +91,17 @@
                         datasets: [
                         {
                             label: "İnsan Yoğunluğu",
-                            backgroundColor: "rgba(221, 65, 83, 0.7)",
+                            backgroundColor: "rgba(221, 65, 83, 0.3)",
                             borderColor : "rgba(221, 65, 83, 1)",
                             pointBackgroundColor: "rgba(221, 65, 83, 1)",
                             data: data.human_data,
+                        },
+                        {
+                            label: "Tehlike Altındaki İnsanlar",
+                            backgroundColor: "rgba(62, 149, 205, 0.3)",
+                            borderColor : "rgba(62, 149, 205, 1)",
+                            pointBackgroundColor: "rgba(62, 149, 205, 1)",
+                            data: data.close_data,
                         },
                     ]
                     },
@@ -131,4 +150,9 @@
     }
     }
 </script>
+{% else %}
+<div class="d-flex justify-content-center mt-4 bg-dark text-light rounded ml-4 mr-4" style="padding:50px;">
+<h4>RAPOR GÖRÜNTÜLEMEK İÇİN ÇALIŞIR HALDE EN AZ 1 ADET KAMERANIZ BULUNMALIDIR.</h4>
+</div>
+{% endif %}
 </body>

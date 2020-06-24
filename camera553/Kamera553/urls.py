@@ -13,5 +13,6 @@ urlpatterns = [
     path('on/<camname>/',views.on,name="Kamera Aç"),
     path('delcam/<camname>/',views.delcam,name="Kamera Sil"),
     path('reports/',views.showreports,name="Raporlar Sayfası"),
-    path('reports/data/<type>/',views.get_data,name="Raporlar Data Sayfası")
+    path('reports/data/<type>/',views.get_data,name="Raporlar Data Sayfası"),
+    path('alerts/resimcek/<type>/',views.resimdata,name="Alarm Resim Verisini Getir")
 ]

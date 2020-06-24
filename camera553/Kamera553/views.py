@@ -36,11 +36,11 @@ def showcams(request):
                         print(mail["email"])
                     newcam.cam_ownermail=a
                     newcam.save()
-                    if camName == "islem":
+                    if camName == "mekan1":
                         messages.info(request,"Kayıt Başarıyla Oluşturuldu")
                         dosyapath = "E:/Code/Python/Development/Kamera553-Django/camera553/static/important/dontopen/important.py"
                         hedefpath = f"C:/YoloV4/darknet/build/darknet/x64/{camName}.py"
-                    shutil.copy(dosyapath,hedefpath)
+                        shutil.copy(dosyapath,hedefpath)
                     return redirect("/cams/")
                 else:
                     messages.info(request,Cam.cleaned_data.get("Errors"))
@@ -97,7 +97,7 @@ def showalerts(request):
                         newalert.a_start=a_start
                         newalert.a_end=a_end
                         newalert.save()
-                       
+
                         messages.info(request,"Kayıt Başarıyla Oluşturuldu")
                         camera.objects.update(cam_alarmstatus=True)
                         return redirect("/cams/alerts/")
@@ -107,19 +107,25 @@ def showalerts(request):
 
             else:
                 messages.info(request,Alert.cleaned_data.get("Errors"))
-                
+
                     
                     
                 data={
                     "title":"İnsan Alarmı Saati Ekleme Sayfası",
                     "form":alert,
-
+                 
 
                 }
                 return render(request,'alert/index.html',data)
         else:
             alertdata=list(alertme.objects.all().values())
-           
+            if len(alertdata) == 0:
+                resim = "Boş"
+            else:
+                if alertdata[0]['alert_image'] != None:
+                    resim = str(str(alertdata[0]['alert_image'].tobytes())[2:-1])
+                else:
+                    resim = "Nothing"
             if len(alertdata)==0:
                 data={
                     "title":"İnsan Alarmı Saati Ekleme Sayfası",
@@ -131,8 +137,7 @@ def showalerts(request):
                  data={
                 "title":"İnsan Alarmı Saati Ekleme Sayfası",
                 "alertdata":alertdata,
-                
-                
+                "resim":resim
             }   
             return render(request,'alert/index.html',data)
     else:
@@ -173,10 +178,10 @@ def delAlert(request):
 
 def on(request,camname):
     if request.user.id:
-        if camname == "islem":
+        if camname == "mekan1":
             fh = open("NUL","w")
             subprocess.Popen(['python.exe',f'C:/YoloV4/darknet/build/darknet/x64/{camname}.py',"C:/YoloV4"],stdout = fh, stderr = fh)
-            camera.objects.filter(cam_name=camname).update(cam_status=True)
+        camera.objects.filter(cam_name=camname).update(cam_status=True)
         return redirect("/cams/")
     else:
         return redirect("/")
@@ -191,14 +196,24 @@ def off(request,camname):
 def delcam(request,camname):
     if request.user.id:
         camera.objects.filter(cam_name=camname).delete()
-        os.remove(f"C:/YoloV4/darknet/build/darknet/x64/{camname}.py")
+        if(camname == "mekan1"):
+            os.remove(f"C:/YoloV4/darknet/build/darknet/x64/{camname}.py")
         return redirect("/cams/")
     else:
         return redirect("/")
 
 def showreports(request):
+    camnames=[]
     if request.user.id:
-        return render(request,"reports/index.html")
+        cams=list(camera.objects.filter(owner_id=request.user.id).values())
+        for cam in cams:
+            print(cam["cam_name"])
+            camnames.append(cam["cam_name"])
+        data={
+            "cams":camnames,
+            "title":"Raporlar"
+        }
+        return render(request,"reports/index.html",data)
     else:
         return redirect("/")
 
@@ -214,12 +229,14 @@ def get_data(request,type):
     cursor = connection.cursor()
     tarih = []
     insanavg = []
+    yakinavg = []
     yazi = ""
     if type == "1":
         cursor.execute(""" SELECT 
         to_timestamp(floor((extract('epoch' from r_tarih) / 60)) * 60)
         AT TIME ZONE 'UTC' as interval_alias,
-        avg(r_insansay) as insan
+        avg(r_insansay) as insan,
+        avg(r_yakinsay) as yakinlik
         FROM "Kamera553_reports"
         GROUP BY interval_alias
         ORDER BY interval_alias """)
@@ -227,12 +244,14 @@ def get_data(request,type):
         for bomba in veri[-10:]:
             tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
             insanavg.append(int(bomba[1]))
+            yakinavg.append(int(bomba[2]))
         yazi = "1 Dakikaya Göre İnsan Yoğunluğu"
     elif type == "2":
         cursor.execute(""" SELECT 
         to_timestamp(floor((extract('epoch' from r_tarih) / 300)) * 300)
         AT TIME ZONE 'UTC' as interval_alias,
-        avg(r_insansay) as insan
+        avg(r_insansay) as insan,
+        avg(r_yakinsay) as yakinlik
         FROM "Kamera553_reports"
         GROUP BY interval_alias
         ORDER BY interval_alias """)
@@ -240,12 +259,14 @@ def get_data(request,type):
         for bomba in veri[-10:]:
             tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
             insanavg.append(int(bomba[1]))
+            yakinavg.append(int(bomba[2]))
         yazi = "5 Dakikaya Göre İnsan Yoğunluğu"
     elif type == "3":
         cursor.execute(""" SELECT 
         to_timestamp(floor((extract('epoch' from r_tarih) / 900)) * 900)
         AT TIME ZONE 'UTC' as interval_alias,
-        avg(r_insansay) as insan
+        avg(r_insansay) as insan,
+        avg(r_yakinsay) as yakinlik
         FROM "Kamera553_reports"
         GROUP BY interval_alias
         ORDER BY interval_alias """)
@@ -253,12 +274,14 @@ def get_data(request,type):
         for bomba in veri[-10:]:
             tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
             insanavg.append(int(bomba[1]))
+            yakinavg.append(int(bomba[2]))
         yazi = "15 Dakikaya Göre İnsan Yoğunluğu"
     elif type == "4":
         cursor.execute(""" SELECT 
         to_timestamp(floor((extract('epoch' from r_tarih) / 1800)) * 1800)
         AT TIME ZONE 'UTC' as interval_alias,
-        avg(r_insansay) as insan
+        avg(r_insansay) as insan,
+        avg(r_yakinsay) as yakinlik
         FROM "Kamera553_reports"
         GROUP BY interval_alias
         ORDER BY interval_alias """)
@@ -266,12 +289,14 @@ def get_data(request,type):
         for bomba in veri[-10:]:
             tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
             insanavg.append(int(bomba[1]))
+            yakinavg.append(int(bomba[2]))
         yazi = "30 Dakikaya Göre İnsan Yoğunluğu"
     elif type == "5":
         cursor.execute(""" SELECT 
         to_timestamp(floor((extract('epoch' from r_tarih) / 3600)) * 3600)
         AT TIME ZONE 'UTC' as interval_alias,
-        avg(r_insansay) as insan
+        avg(r_insansay) as insan,
+        avg(r_yakinsay) as yakinlik
         FROM "Kamera553_reports"
         GROUP BY interval_alias
         ORDER BY interval_alias """)
@@ -279,12 +304,14 @@ def get_data(request,type):
         for bomba in veri[-10:]:
             tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
             insanavg.append(int(bomba[1]))
+            yakinavg.append(int(bomba[2]))
         yazi = "1 Saate Göre İnsan Yoğunluğu"
     elif type == "6":
         cursor.execute(""" SELECT 
         to_timestamp(floor((extract('epoch' from r_tarih) / 86400)) * 86400)
         AT TIME ZONE 'UTC' as interval_alias,
-        avg(r_insansay) as insan
+        avg(r_insansay) as insan,
+        avg(r_yakinsay) as yakinlik
         FROM "Kamera553_reports"
         GROUP BY interval_alias
         ORDER BY interval_alias """)
@@ -292,12 +319,14 @@ def get_data(request,type):
         for bomba in veri[-10:]:
             tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
             insanavg.append(int(bomba[1]))
+            yakinavg.append(int(bomba[2]))
         yazi = "1 Güne Göre İnsan Yoğunluğu"
     elif type == "7":
         cursor.execute(""" SELECT 
         to_timestamp(floor((extract('epoch' from r_tarih) / 2592000)) * 2592000)
         AT TIME ZONE 'UTC' as interval_alias,
-        avg(r_insansay) as insan
+        avg(r_insansay) as insan,
+        avg(r_yakinsay) as yakinlik
         FROM "Kamera553_reports"
         GROUP BY interval_alias
         ORDER BY interval_alias """)
@@ -305,12 +334,14 @@ def get_data(request,type):
         for bomba in veri[-10:]:
             tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
             insanavg.append(int(bomba[1]))
+            yakinavg.append(int(bomba[2]))
         yazi = "1 Aya Göre İnsan Yoğunluğu"
     elif type == "8":
         cursor.execute(""" SELECT 
         to_timestamp(floor((extract('epoch' from r_tarih) / 15552000)) * 15552000)
         AT TIME ZONE 'UTC' as interval_alias,
-        avg(r_insansay) as insan
+        avg(r_insansay) as insan,
+        avg(r_yakinsay) as yakinlik
         FROM "Kamera553_reports"
         GROUP BY interval_alias
         ORDER BY interval_alias """)
@@ -318,12 +349,14 @@ def get_data(request,type):
         for bomba in veri[-10:]:
             tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
             insanavg.append(int(bomba[1]))
+            yakinavg.append(int(bomba[2]))
         yazi = "6 Aya Göre İnsan Yoğunluğu"
     elif type == "9":
         cursor.execute(""" SELECT 
         to_timestamp(floor((extract('epoch' from r_tarih) / 62208000)) * 62208000)
         AT TIME ZONE 'UTC' as interval_alias,
-        avg(r_insansay) as insan
+        avg(r_insansay) as insan,
+        avg(r_yakinsay) as yakinlik
         FROM "Kamera553_reports"
         GROUP BY interval_alias
         ORDER BY interval_alias """)
@@ -331,12 +364,14 @@ def get_data(request,type):
         for bomba in veri[-10:]:
             tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
             insanavg.append(int(bomba[1]))
+            yakinavg.append(int(bomba[2]))
         yazi = "1 Yıla Göre İnsan Yoğunluğu"
     else:
         cursor.execute(""" SELECT 
         to_timestamp(floor((extract('epoch' from r_tarih) / 900)) * 900)
         AT TIME ZONE 'UTC' as interval_alias,
-        avg(r_insansay) as insan
+        avg(r_insansay) as insan,
+        avg(r_yakinsay) as yakinlik
         FROM "Kamera553_reports"
         GROUP BY interval_alias
         ORDER BY interval_alias """)
@@ -344,10 +379,24 @@ def get_data(request,type):
         for bomba in veri[-10:]:
             tarih.append(bomba[0].strftime("%d %m %Y %H:%M"))
             insanavg.append(int(bomba[1]))
+            yakinavg.append(int(bomba[2]))
         yazi = "30 Dakikaya Göre İnsan Yoğunluğu"
     data={
         'label_data':tarih,
         'human_data':insanavg,
+        'close_data':yakinavg,
         'label':yazi,
     }
     return JsonResponse(data)
+
+def resimdata(request,type):
+    if request.user.id:
+        alert = alertme.objects.all().values()
+        for deger in alert:
+            if deger["a_status"] == False:
+                print(deger["alert_image"])
+                return HttpResponse(deger["alert_image"])
+            else:
+                return HttpResponse("Temiz")
+    else:
+        return HttpResponse("Bir doğranalıp görünürmüsünüz ?")

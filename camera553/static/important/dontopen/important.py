@@ -1,30 +1,9 @@
 from ctypes import *
 from datetime import datetime,time
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
 from itertools import combinations
-import math,random,os,sys,cv2,base64,darknet,psycopg2,smtplib
+import math,random,os,sys,cv2,base64,darknet,psycopg2
 import numpy as np
 import urllib.request as urllib
-
-
-
-def sendmail():
-    global maildurum
-    maildurum = 0
-    server = smtplib.SMTP(host="smtp.live.com",port=587)
-    message = MIMEMultipart()
-    password = ""
-    message['From'] = "mertcanfidan0635@outlook.com"
-    message['To'] = mail
-    message['Subject'] = 'İzin verilmeyen saatlerde giriş tespiti!'
-    message.attach(MIMEText("İzin verilmeyen giriş!"))
-    server.ehlo()
-    server.starttls()
-    server.login('mertcanfidan0635@outlook.com','mtmuetkftnwspiqz')
-    server.sendmail(message['From'],message['To'],message.as_string())
-    server.quit()
 
 def is_close(p1, p2):
     dst = math.sqrt(p1**2 + p2**2)
@@ -40,7 +19,7 @@ def convertBack(x, y, w, h):
 
 
 def cvDrawBoxes(detections, img):
-    global degermax,hedefzaman,maildurum
+    global degermax,hedefzaman,degertehlikemax,alarmver
     if len(detections) > 0:
         centroid_dict = dict()
         objectId = 0
@@ -55,12 +34,42 @@ def cvDrawBoxes(detections, img):
                 centroid_dict[objectId] = (int(x), int(y), xmin, ymin, xmax, ymax)
                 objectId += 1    
 
+        red_zone_list = [] 
+        red_line_list = []
+        for (id1, p1), (id2, p2) in combinations(centroid_dict.items(), 2):
+            if(p1[0] > p2[0]):
+                if(p1[1] > p2[1]):
+                    dx,dy = p1[0] - p2[0],p1[1] - p2[1]
+                else:
+                    dx,dy = p1[0] - p2[0], p2[1] - p2[1]
+            else:
+                if(p1[1] > p2[1]):
+                    dx,dy = p2[0] - p1[0],p1[1] - p2[1]
+                else:
+                    dx,dy = p2[0] - p1[0], p2[1] - p2[1]  
+            distance = is_close(dx, dy) 	
+            if distance < 75.0:						
+                if id1 not in red_zone_list:
+                    red_zone_list.append(id1)     
+                    red_line_list.append(p1[0:2])   
+                if id2 not in red_zone_list:
+                    red_zone_list.append(id2)	
+                    red_line_list.append(p2[0:2])
+
         for idx, box in centroid_dict.items():
-                cv2.rectangle(img, (box[2], box[3]), (box[4], box[5]), (0, 255, 0), 2)
+            if idx in red_zone_list:  
+                cv2.rectangle(img, (box[2], box[3]), (box[4], box[5]), (255, 0, 0), 2)
+                cv2.putText(img, "Tehlikede", (box[2],box[3]-15), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 1, cv2.LINE_AA)
+            else:
+                cv2.rectangle(img, (box[2], box[3]), (box[4], box[5]), (0, 255, 0), 1)
+                cv2.putText(img, "Insan", (box[2],box[3]-15), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 255, 0), 1, cv2.LINE_AA)
 
 
         if len(centroid_dict) > degermax:
             degermax = len(centroid_dict)
+
+        if(len(red_zone_list) > degertehlikemax):
+            degertehlikemax = len(red_zone_list)
         
         gecerlizaman = datetime.now().time()
         gecerlidakika = gecerlizaman.minute
@@ -73,8 +82,7 @@ def cvDrawBoxes(detections, img):
                         deger = cursor.fetchall()
                         for veri in deger:
                             if veri[0] == True:
-                                cursor.execute("""update  "Kamera553_alertme" set a_status = false """)
-                                maildurum = 1
+                                alarmver = 1
                             else:
                                 pass
                     else:
@@ -85,8 +93,7 @@ def cvDrawBoxes(detections, img):
                         deger = cursor.fetchall()
                         for veri in deger:
                             if veri[0] == True:
-                                cursor.execute("""update  "Kamera553_alertme" set a_status = false """)
-                                maildurum = 1
+                                alarmver = 1
                             else:
                                 pass
                     else:
@@ -95,8 +102,8 @@ def cvDrawBoxes(detections, img):
                 pass
 
         if(gecerlidakika == hedefzaman):
-            cursor.execute(f"""insert into "Kamera553_reports" (r_insansay,r_camid) VALUES ({degermax},{camid})""")
-            degermax = 0
+            cursor.execute(f"""insert into "Kamera553_reports" (r_yakinsay,r_insansay,r_camid) VALUES ({degertehlikemax},{degermax},{camid})""")
+            degermax,degertehlikemax = 0,0
             if(gecerlidakika + periot > 60):
                     hedefzaman = gecerlidakika + periot - 60
             elif(gecerlidakika == 60):
@@ -106,10 +113,24 @@ def cvDrawBoxes(detections, img):
 
         text = "Insan Sayisi: %s" % str(len(centroid_dict))
         text2 = f"Maximum Insan Sayisi: {str(degermax)}"
+        text3 = f"Tehlike Altindaki Insan Sayisi: {str(len(red_zone_list))}"
+        text4 = f"Maximum Tehlikedeki Insan Sayisi: {degertehlikemax}"
         location = (20,45)
         location2 = (20,95)
-        cv2.putText(img, text, location, cv2.FONT_HERSHEY_DUPLEX, 1, (231,76,60), 2, cv2.LINE_AA)
-        cv2.putText(img, text2, location2, cv2.FONT_HERSHEY_DUPLEX, 1, (46,204,113), 2, cv2.LINE_AA)
+        location3 = (20,145)
+        location4 = (20,195)
+        cv2.putText(img, text, location, cv2.FONT_HERSHEY_DUPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+        cv2.putText(img, text2, location2, cv2.FONT_HERSHEY_DUPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
+        cv2.putText(img, text3, location3, cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+        cv2.putText(img, text4, location4, cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+
+        for check in range(0, len(red_line_list)-1):					
+            start_point = red_line_list[check] 
+            end_point = red_line_list[check+1]
+            check_line_x = abs(end_point[0] - start_point[0])   		 
+            check_line_y = abs(end_point[1] - start_point[1])			
+            if (check_line_x < 75) and (check_line_y < 25):		
+                cv2.line(img, start_point, end_point, (255, 0, 0), 1) 
     return img
 
 
@@ -160,9 +181,9 @@ def alarmvekamerakontrol():
 
 
 def YOLO():
-    global degermax,metaMain, netMain, altNames
+    global degermax,metaMain, netMain, altNames,degertehlikemax,alarmver
     
-    degermax,deger = 0,0
+    degermax,degertehlikemax,deger = 0,0,0
 
     configPath = f"{usedpath}/cfg/yolov4.cfg"
     weightPath = f"{usedpath}/yolov4.weights"
@@ -202,51 +223,54 @@ def YOLO():
         except Exception:
             pass
 
-
     stream = urllib.urlopen(camurl)
     bytes = b''
     while True:
-        bytes += stream.read(1024)
-        a = bytes.find(b'\xff\xd8')
-        b = bytes.find(b'\xff\xd9')
-        if a != -1 and b != -1:
-            jpg = bytes[a:b+2]
-            bytes = bytes[b+2:]
-            img = cv2.imdecode(np.fromstring(jpg, dtype=np.uint8), cv2.COLOR_BGR2RGB)
-            
-            if deger == 0:
-                new_height, new_width, channels = img.shape
-                darknet_image = darknet.make_image(new_width, new_height, 3)
-                deger = 1
-            frame_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            frame_resized = cv2.resize(frame_rgb,
-                                    (new_width, new_height),
-                                    interpolation=cv2.INTER_LINEAR)
-            darknet.copy_image_from_bytes(darknet_image,frame_resized.tobytes())
-            detections = darknet.detect_image(netMain, metaMain, darknet_image, thresh=0.25)
-            image = cvDrawBoxes(detections, frame_resized)
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            retval, buffer = cv2.imencode('.jpg', image)
-            jpg_as_text = base64.b64encode(buffer)
-            if maildurum == 1:
-                sendmail()
-            try:
-                sql_update_query = """Update "Kamera553_camera" set cam_image = %s where id = %s"""
-                cursor.execute(sql_update_query, (jpg_as_text, camid))
-                connection.commit()
-            except:
-                print("Bağlantı kayboldu")
-                exit()
+            bytes += stream.read(1024)
+            a = bytes.find(b'\xff\xd8')
+            b = bytes.find(b'\xff\xd9')
+            if a != -1 and b != -1:
+                jpg = bytes[a:b+2]
+                bytes = bytes[b+2:]
+                img = cv2.imdecode(np.fromstring(jpg, dtype=np.uint8), cv2.COLOR_BGR2RGB)
+                if deger == 0:
+                    new_height, new_width, channels = img.shape
+                    darknet_image = darknet.make_image(new_width, new_height, 3)
+                    deger = 1
+                frame_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                frame_resized = cv2.resize(frame_rgb,
+                                        (new_width, new_height),
+                                        interpolation=cv2.INTER_LINEAR)
+                darknet.copy_image_from_bytes(darknet_image,frame_resized.tobytes())
+                detections = darknet.detect_image(netMain, metaMain, darknet_image, thresh=0.25)
+                image = cvDrawBoxes(detections, frame_resized)
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                retval, buffer = cv2.imencode('.jpg', image)
+                jpg_as_text = base64.b64encode(buffer)
+                
+                if alarmver == 1:
+                    sql_update_query = """Update "Kamera553_alertme" set a_status = %s, alert_image = %s """
+                    cursor.execute(sql_update_query, ("false",jpg_as_text))
+                    connection.commit()
+                    alarmver = 0
 
-            alarmvekamerakontrol()
-            
-            cv2.imshow(str(os.path.basename(sys.argv[0]))[:-3], image)
-            cv2.imwrite(f"E:/Code/Python/Development/Kamera553-Django/camera553/static/image/resim.jpg",image)
-            if cv2.waitKey(3) & 0xFF == ord('q'):
-                if(connection):
-                    cursor.close()
-                    connection.close()
-                break
+                try:
+                    sql_update_query = """Update "Kamera553_camera" set cam_image = %s where id = %s"""
+                    cursor.execute(sql_update_query, (jpg_as_text, camid))
+                    connection.commit()
+                except:
+                    print("Bağlantı kayboldu")
+                    exit()
+
+                alarmvekamerakontrol()
+                
+                cv2.imshow(str(os.path.basename(sys.argv[0]))[:-3], image)
+                cv2.imwrite(f"E:/Code/Python/Development/Kamera553-Django/camera553/static/image/resim.jpg",image)
+                if cv2.waitKey(3) & 0xFF == ord('q'):
+                    if(connection):
+                        cursor.close()
+                        connection.close()
+                    break
 
 if __name__ == "__main__":
     usedpath = sys.argv[1]
@@ -260,7 +284,7 @@ if __name__ == "__main__":
         )
         cursor = connection.cursor()
         try:
-            cursor.execute(f"""select cam_url,cam_period,id,cam_ownermail from "Kamera553_camera" WHERE cam_name = '{str(os.path.basename(sys.argv[0]))[:-3]}'""")
+            cursor.execute(f"""select cam_url,cam_period,id from "Kamera553_camera" WHERE cam_name = '{str(os.path.basename(sys.argv[0]))[:-3]}'""")
             sonuc = cursor.fetchall()
             if len(sonuc) == 0:
                 print("Tanımlı görev bulunamadı!")
@@ -270,10 +294,10 @@ if __name__ == "__main__":
                 exit()
             else:
                 for satir in sonuc:
-                        degermax = 0
+                        degermax,dagertehlikemax,alarmver = 0,0,0
                         gecerlidakika = datetime.now().time().minute
-                        periot,camurl,camid,mail = satir[1],satir[0],satir[2],satir[3]
-                        saatbaslangic,saatbitis,ikincibaslangictime,ikincibitistime,maildurum = None,None,None,None,0
+                        periot,camurl,camid = satir[1],satir[0],satir[2]
+                        saatbaslangic,saatbitis,ikincibaslangictime,ikincibitistime = None,None,None,None
                         if(gecerlidakika + periot > 60):
                             hedefzaman = gecerlidakika + periot - 60
                         elif(gecerlidakika == 60):

@@ -57,7 +57,6 @@
             {% for alert in alertdata %}
             <table class="table">
                 <tr>
-                    
                     <th>Başlangıç Saati</th>
                     <th>Bitiş Saati</th>
                     <th>Alarm Durumu</th>
@@ -73,11 +72,9 @@
                     </td>
                     <td>
                         {% if alert.a_status %}
-                         <p  class="btn btn-success text-white rounded-0" >Açık</p>
+                         <p  class="btn btn-success text-white rounded-0" id="kontrol">Açık</p>
                         {% else %}
-                        <a href="/cams/alerts/activate/"><p class="btn btn-danger text-white rounded-0" >Kapalı</p></a>
-                            
-
+                        <a href="/cams/alerts/activate/"><p class="btn btn-danger text-white rounded-0" id="kontrol">Kapalı</p></a>
                         {% endif %}
                     </td>
                     <td>
@@ -89,14 +86,37 @@
                 </tr>
             <table>
             </form>
+
+            {% if alert.a_status %}
+            {% else %}
+            <div class="border justify-content-center d-flex" id="bakalim">
+                <img width="650" height="650" src='data:image/jpeg;base64,{{resim}}' />
+            </div>
+            {% endif %}
             {% endfor %}
           {%endif%}
         {% endif %}
-
     </div>
 
 
 
     {% include "layout/script.html" %}
+    <script>
+        if (document.getElementById('kontrol').innerHTML == "Açık"){
+        setTimeout(function() {
+            $.ajax({
+            method:'GET',
+            url:'/cams/alerts/resimcek/1/',
+            success:function(data){
+                if (data != "Temiz"){
+                    location.reload()
+                }
+            },
+            error:function(data){
+                console.log('Error!');
+            }
+        });}, 10000);
+        }
+    </script>
 {% endblock body %}
 </html>
